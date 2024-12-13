@@ -1,6 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Moon+Walk&family=Zen+Dots&family=Michrome&display=swap');
+
 
 :root {
   --background: #ffffff;
@@ -17,5 +19,17 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Moon Walk", "zen dots", "Michroma", sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: "Moon Walk", sans-serif; /* Font for main headings */
+}
+
+h4, h5, h6 {
+  font-family: "Zen Dots", sans-serif; /* Font for secondary headings */
+}
+
+p, span, li {
+  font-family: "Michroma", sans-serif; /* Default font for paragraph text */
 }
