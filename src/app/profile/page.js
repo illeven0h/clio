@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Nav from "../components/Nav";
+import Card from "../components/Card";
 
 const ContentGrid = ({ hasContent }) => {
   if (!hasContent) {
@@ -13,24 +14,17 @@ const ContentGrid = ({ hasContent }) => {
   }
 
   return (
-  
-    <div className="grid grid-cols-3 gap-2 p-4 w-full max-w-screen-lg">
-      {Array.from({ length: 9 }).map((_, index) => (
-        <div
-          key={index}
-          className="relative aspect-square bg-gray-200 flex items-center justify-center rounded-lg overflow-hidden shadow-md"
-        >
-          <img
-            src={`/images/post-${index + 1}.png`}
-            alt={`Post ${index + 1}`}
-            className="object-cover w-full h-full"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-            <p className="text-white text-sm font-bold">Post {index + 1}</p>
+    <div className="min-h-screen p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card />
+            <Card />
+            <Card />
+            <Card />
+            <Card />
+            <Card />
+            <Card />
           </div>
         </div>
-      ))}
-    </div>
   );
 };
 
@@ -47,28 +41,28 @@ const Frame = ({ onTabClick }) => {
     <div className="relative w-full flex flex-row items-center justify-center text-center text-lg text-black font-body pb-2 space-x-5">
       <a
         href="#"
-        className={`relative lowercase font-michroma text-black hover:text-gray-500 ${activeTab === "creation" ? "border-b-2 border-black" : ""}`}
+        className={`relative text-[16px] lowercase font-secondary text-bone hover:text-gray-500 ${activeTab === "creation" ? "border-b-2 border-white" : ""}`}
         onClick={() => handleTabClick("creation")}
       >
         Creation
       </a>
       <a
         href="#"
-        className={`relative lowercase font-michroma text-black hover:text-gray-500 ${activeTab === "saved" ? "border-b-2 border-black" : ""}`}
+        className={`relative lowercase text-[16px] font-secondary text-bone hover:text-gray-500 ${activeTab === "saved" ? "border-b-2 border-white" : ""}`}
         onClick={() => handleTabClick("saved")}
       >
         Saved
       </a>
       <a
         href="#"
-        className={`relative lowercase font-michroma text-black hover:text-gray-500 ${activeTab === "spotlight" ? "border-b-2 border-black" : ""}`}
+        className={`relative lowercase text-[16px] font-secondary text-bone hover:text-gray-500 ${activeTab === "spotlight" ? "border-b-2 border-white" : ""}`}
         onClick={() => handleTabClick("spotlight")}
       >
         Spotlight
       </a>
       <a
         href="#"
-        className={`relative lowercase font-michroma text-black hover:text-gray-500 ${activeTab === "liked" ? "border-b-2 border-black" : ""}`}
+        className={`relative lowercase text-[16px] font-secondary text-bone hover:text-gray-500 ${activeTab === "liked" ? "border-b-2 border-white" : ""}`}
         onClick={() => handleTabClick("liked")}
       >
         Liked
@@ -95,12 +89,12 @@ export default function ProfilePage() {
   return (
     <>
     <Nav />
-    <div className="bg-white pt-16 min-h-screen bg-floralwhite flex flex-col items-center">
+    <div className="bg-[#1B1B1B] pt-16 min-h-screen bg-floralwhite flex flex-col items-center">
       {/* Profile Picture */}
       <div className="py-6">
-        <div className="w-[120px] h-[120px] relative rounded-full bg-gray-300 overflow-hidden border-4 border-black">
+        <div className="w-[120px] h-[120px] relative rounded-full overflow-hidden border-4 border-ivory">
           <img
-            src="/images/feedback.svg"
+            src="/profile.svg"
             alt="Profile Picture"
             className="object-cover w-full h-full"
           />
@@ -108,16 +102,16 @@ export default function ProfilePage() {
       </div>
 
       {/* Username */}
-      <div className="w-full text-center text-[24px] font-body text-black inline-block capitalize mb-2">
+      <div className="w-full font-secondary text-center text-[20px]  text-ivory inline-block capitalize mb-2">
         sana Lio
       </div>
 
       {/* Action Buttons */}
-      <div className="flex mt-4 justify-center gap-4">
+      {/* <div className="flex mt-4 justify-center gap-4">
         <button className="px-6 py-1 bg-black text-white rounded-md text-sm lowercase font-michroma">
           Create Ad
         </button>
-      </div>
+      </div> */}
 
       {/* Tab Navigation */}
       <div className="mt-6 w-full">

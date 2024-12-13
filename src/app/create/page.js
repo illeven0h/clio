@@ -18,12 +18,6 @@ export default function Create() {
           className="absolute z-[-1] p-4"
         />
   
-        {/* Top Section */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 w-[90%] top-0 flex justify-between items-center h-[100px] 2xl:px-16 px-4">
-          <Link href="/home">
-            <h4 className="text-3xl cursor-pointer text-black">Clio</h4>
-          </Link>
-        </div>
 
 
         <div className="gap-4 flex flex-col items-center w-full">

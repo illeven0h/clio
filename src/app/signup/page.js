@@ -1,8 +1,7 @@
 "use client";
-import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { auth } from "/src/config/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import Button from "../components/Button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -12,8 +11,19 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState("");
-
+  
   const router = useRouter();
+
+  useEffect(() => {
+    // Redirect to home if user is already logged in
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.push('/home');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   const handleEmailSignUp = async (e) => {
     e.preventDefault();
@@ -26,11 +36,11 @@ export default function SignupPage() {
       // Clear input fields
       setEmail('');
       setPassword('');
-
-      router.push('/home');
+      
+      // The redirection should happen in the useEffect after successful authentication
     } catch (err) {
       console.error("Error signing up:", err.message);
-      setError(err.message); // Set error message on failure
+      setError("An error occurred during sign-up. Please try again.");
     }
   };
 
@@ -71,8 +81,6 @@ export default function SignupPage() {
               <span>OR</span>
               <hr className="flex-grow border-t border-gray-300" />
             </div>
-
-            
 
             {/* Google sign-up button */}
             <Button text="Continue with Google"> 

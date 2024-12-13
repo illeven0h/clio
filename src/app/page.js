@@ -8,14 +8,14 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from "./context/authContext.js"
 
 export default function LandingPage() {
-  const { user } = useAuth();
-  const router = useRouter();
+  // const { user } = useAuth();
+  // const router = useRouter();
 
-  useEffect(() => {
-    if (user) {
-      router.push('/home'); // Redirect if authenticated
-    }
-  }, [user, router]);
+  // useEffect(() => {
+  //   if (user) {
+  //     router.push('/home'); // Redirect if authenticated
+  //   }
+  // }, [user, router]);
 
   return (
     <div className="h-screen flex flex-col justify-center items-center relative">
