@@ -1,21 +1,11 @@
 "use client";
 import Link from "next/link";
-import Nav from "../app/components/Nav.js";
 import Image from "next/image";
 import Button from "./components/Button.js";
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from "./context/authContext.js"
+
 
 export default function LandingPage() {
-  // const { user } = useAuth();
-  // const router = useRouter();
 
-  // useEffect(() => {
-  //   if (user) {
-  //     router.push('/home'); // Redirect if authenticated
-  //   }
-  // }, [user, router]);
 
   return (
     <div className="h-screen flex flex-col justify-center items-center relative">

@@ -2,28 +2,8 @@
 import Button from './Button';
 import Link from 'next/link';
 import React from 'react';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '../context/authContext';
 
 const Nav = () => {
-    const { user, logout } = useAuth();
-    const router = useRouter();
-
-    useEffect(() => {
-      console.log("User:", user); // Log the user state
-      if (!user) {
-        router.push('/'); // Redirect to landing page if not authenticated
-      }
-    }, [user, router]);
-  
-    if (!user) return null; // Render nothing if no user is logged in
-  
-    const handleLogout = () => {
-      logout(); // Call logout function from context
-      router.push('/'); // Redirect to landing page
-    };
-
     
     return (
         <nav className=' w-full text-bone z-50 mt-4 fixed'>
@@ -52,7 +32,7 @@ const Nav = () => {
                 </ul>
             </div>
                 <Button
-                onClick={handleLogout} text="logout" />
+                 text="logout" />
             </div>
         </nav>
     );
