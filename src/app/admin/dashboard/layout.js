@@ -3,7 +3,7 @@ import Navbar from '@/app/components/admin-dashboard/navbar';
 export default function Layout({children}) {
     return (
         <div className="flex">
-            <div className='basis-1/5 flex-shrink-0 bg-gray-500 '>
+            <div className='basis-1/5 flex-shrink-0  '>
                 <Sidebar />
             </div>
 
@@ -11,7 +11,6 @@ export default function Layout({children}) {
                 <Navbar  />
                 {children}
             </div>
-
 
         </div>
     )

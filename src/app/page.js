@@ -2,9 +2,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import Button from "./components/Button.js";
+import { useAuth } from "/firebase/auth";
+import { useRouter } from "next/navigation";
 
 
 export default function LandingPage() {
+    const {currentUser} = useAuth()
+    const router = useRouter()
+
+  if(currentUser) {
+    router.push('/home')
+   }
 
 
   return (

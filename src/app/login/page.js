@@ -4,9 +4,31 @@ import Button from "../components/Button";
 import Image from "next/image";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../../../firebase/auth";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState(null) 
+  const {login, currentUser} = useAuth();
+  const router = useRouter();
 
+  console.log(currentUser)
+
+  async function LoginHandler(){
+    if(!email || !password){
+      setError("Please fill in all fields")
+      return
+    }
+
+    try{
+     await login(email, password)
+     router.push('/home')
+    }catch(err){
+      setError("failed to login the user")
+    }
+    
+  }
 
   return (
     <div className="flex flex-col justify-center min-h-screen py-2 bg-black">
@@ -18,28 +40,25 @@ export default function LoginPage() {
           <input
             className="border-2 text-[12px] bg-black font-body mt-12 text-ivory border-ivory px-4 py-2 w-full rounded-full"
             type="email"
-            // value={email}
-            // onChange={(e) => setEmail(e.target.value)} // Bind the state here
+            value={email}
+            onChange={(e) => setEmail(e.target.value)} // Bind the state here
             placeholder="Email Address"
           />
           <input
             className="border-2 text-[12px] bg-black mt-4 mb-4 font-body text-ivory border-ivory px-4 py-2 w-full rounded-full"
             type="password"
-            // value={password}
-            // onChange={(e) => setPassword(e.target.value)} // Bind the state here
+            value={password}
+            onChange={(e) => setPassword(e.target.value)} // Bind the state here
             placeholder="Password"
           />
           
-          {/* {error && <p className="text-red-500 text-[12px]">{error}</p>} Show error if any */}
+          {error && <p className="text-red-500 text-[12px]">{error}</p>}
           
-          <p className="pb-3 text-[12px]">
-            Don't have an account?{" "}
-            <span className="border-b">
-              <Link href="/signup">Signup</Link>
-            </span>
-          </p>
+
           <div className="flex flex-col gap-3">
-            <Button  text="Continue"></Button>
+            <Button
+            onClick={LoginHandler}
+            text="Continue"></Button>
             <div className="flex p-3 items-center gap-4">
               <hr className="flex-grow border-t border-gray-300" />
               <span>OR</span>
@@ -55,7 +74,14 @@ export default function LoginPage() {
               />
             </Button>
           </div>
-          <p className="text-[12px] pt-3">
+          <p className="py-2 text-[12px]">
+            Don't have an account?{" "}
+            <span className="border-b">
+              <Link href="/signup">Signup</Link>
+            </span>
+          </p>
+
+          <p className="text-[12px] ">
             For admin -{" "}
             <span className="border-b">
               <Link href="/admin/login">Login</Link>

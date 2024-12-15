@@ -1,11 +1,9 @@
 import Link from "next/link";
 import Button from "../components/Button";
-import Nav from "../components/Nav";
 import Image from "next/image";
 export default function Feedback(){
     return(
         <>
-        <Nav />
         <div className="h-screen flex flex-col justify-center items-center relative">
 
         {/* Background Image */}

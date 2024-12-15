@@ -1,38 +1,54 @@
 "use client";
 
-import React, { useState, useEffect, useContext, createContext } from "react";
-import nookies from "nookies";
-import { initializeFirebase } from "/firebase/initFirebase"; // Updated import
+import { useState, useEffect, createContext, useContext } from "react";
+import { initializeFirebase } from "/firebase/initFirebase"; // Import your Firebase initialization function
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 
 // Create Auth Context
 const AuthContext = createContext();
 
 // Auth Provider Component
-export const AuthProvider = ({ children }) => {
-  const { auth } = initializeFirebase();  // Call the function to get auth service
+export function useAuth() {
+  return useContext(AuthContext);
+}
 
-  const [user, setUser] = useState(null);
+export const AuthProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { auth } = initializeFirebase(); // Get auth from Firebase initialization
 
   useEffect(() => {
-    const unsubscribe = auth.onIdTokenChanged(async (user) => {
-      if (!user) {
-        setUser(null);
-        nookies.set(undefined, "token", "", {});
-        return;
-      }
-
-      const token = await user.getIdToken();
-      setUser(user);
-      nookies.set(undefined, "token", token, {});
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setLoading(false);
     });
 
-    return () => unsubscribe(); // Cleanup the listener on unmount
-  }, [auth]); // Depend on auth service to avoid re-initialization
+    return () => unsubscribe(); // Cleanup on unmount
+  }, [auth]);
 
-  return <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>;
-};
+  const signUp = (email, password) => {
+    return createUserWithEmailAndPassword(auth, email, password);
+  };
 
-// Custom Hook to Use Auth Context
-export const useAuth = () => {
-  return useContext(AuthContext);
+  const login = (email, password) => {
+    return signInWithEmailAndPassword(auth, email, password);
+  };
+
+  const logout = () => {
+    return signOut(auth);
+  };
+
+  const value = {
+    currentUser,
+    loading,
+    signUp,
+    login,
+    logout,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 };

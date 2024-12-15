@@ -2,17 +2,21 @@
 import Button from "../components/Button";
 import Image from "next/image";
 import Link from "next/link";
-import Nav from "../components/Nav";
-import Card from "../components/Card";
 
+import Card from "../components/Card";
+import { useAuth } from "../../../firebase/auth";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const {currentUser} = useAuth()
+  const router = useRouter()
 
-
+   if(!currentUser) {
+    router.push('/')
+   }
 
   return (
     <>
-      <Nav />
       <div className="h-screen overflow-y-scroll flex flex-col justify-center items-center relative">
 
         <div><h4 className="mt-[200px] text-bone text-[32px]">Spotlight</h4></div>

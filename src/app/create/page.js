@@ -1,12 +1,10 @@
 import Button from "../components/Button";
 import Image from "next/image";
 import Link from "next/link";
-import Nav from "../components/Nav";
 export default function Create() {
     return (
         <>
 
-        <Nav />
         <div className="h-screen flex flex-col justify-center items-center relative">
 
         {/* Background Image */}

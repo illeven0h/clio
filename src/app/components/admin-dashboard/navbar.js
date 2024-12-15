@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 const Navbar = () => {
   const path = usePathname();
   return (
-    <nav className='p-4 rounded-2xl bg-gray-800' >
+    <nav className='p-4 rounded-2xl border-2 border-bone ' >
     <div className='flex justify-between items-center'>
         <div className='text-bone font-secondary '>{path.split("/admin/").pop()}</div>
         <div className='border-bone p-2 gap-4 rounded-xl w-max border-2 w-content flex justify-evenly'>

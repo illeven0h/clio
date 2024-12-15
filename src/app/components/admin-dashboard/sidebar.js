@@ -43,7 +43,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="h-screen fixed bg-gray-800 text-white p-8">
+    <div className="h-screen mt-2 fixed bg-black border-2 rounded-3xl border-bone text-bone p-8">
       {/* Sidebar Header */} 
       <h4 className="text-xl mb-6">Admin Dashboard</h4>
 

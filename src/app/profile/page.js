@@ -88,7 +88,6 @@ export default function ProfilePage() {
 
   return (
     <>
-    <Nav />
     <div className="bg-[#1B1B1B] pt-16 min-h-screen bg-floralwhite flex flex-col items-center">
       {/* Profile Picture */}
       <div className="py-6">
