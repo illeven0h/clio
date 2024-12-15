@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Nav from "../components/Nav";
 import Card from "../components/Card";
+import { useAuth } from "../../../firebase/auth";
 
 const ContentGrid = ({ hasContent }) => {
   if (!hasContent) {
@@ -74,6 +75,7 @@ const Frame = ({ onTabClick }) => {
 
 
 export default function ProfilePage() {
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState("creation");
 
   // Simulate presence of content for each category
@@ -101,8 +103,8 @@ export default function ProfilePage() {
       </div>
 
       {/* Username */}
-      <div className="w-full font-secondary text-center text-[20px]  text-ivory inline-block capitalize mb-2">
-        sana Lio
+      <div className="w-full font-secondary text-center text-[20px]  text-ivory inline-block mb-2">
+      {currentUser.email}
       </div>
 
       {/* Action Buttons */}
