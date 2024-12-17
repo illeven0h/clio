@@ -17,47 +17,33 @@ export default function LoginPage() {
   const {firestore} = initializeFirebase()
   const router = useRouter();
   
-  async function fetchUserRole(email) {
+  async function LoginHandler() {
     try {
-      const userDocRef = doc(firestore, "userRoles", email);
-      console.log("Fetching user role for:", email);
-      const userDoc = await getDoc(userDocRef);
-
+      const userCredential = await login(email, password); 
+      const user = userCredential.user;
+  
+      // Fetch role from Firestore using the user's UID
+      const userDoc = await getDoc(doc(firestore, "users", user.uid));
+  
       if (userDoc.exists()) {
-        console.log("Role fetched successfully:", userDoc.data().role);
-        return userDoc.data().role;
+        const userData = userDoc.data();
+        const role = userData.role;
+  
+        // Redirect based on role
+        if (role === "admin") {
+          router.push("/admin/dashboard");
+        } else if (role === "user") {
+          router.push("/home");
+        }
       } else {
-        console.error("No such document for email:", email);
-        throw new Error("Role not found");
+        console.error("No user data found in Firestore!");
       }
     } catch (error) {
-      console.error("Error fetching user role:", error);
-      return null;
+      console.error("Error during login:", error);
+      setError("Failed to log in. Please check your credentials.");
     }
   }
-
-  async function LoginHandler(){
-    if(!email || !password){
-      setError("Please fill in all fields")
-      return
-    }
-
-    try{
-     await login(email, password)
-    
-    const role = await fetchUserRole(email);
-     if (role === "admin") {
-       router.push("/admin/dashboard");
-     } else if (role === "user") {
-       router.push("/home");
-     } else {
-       throw new Error("Unknown role.");
-     }
-    }catch(err){
-      setError("failed to login the user")
-    }
-    
-  }
+  
  
   return (
     <div className="flex flex-col justify-center min-h-screen py-2 bg-black">

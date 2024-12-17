@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MdDashboard, MdPeople, MdContentPaste, MdReport, MdSettings, MdPerson } from 'react-icons/md';
+import { MdDashboard, MdFeedback , MdPeople, MdContentPaste, MdReport, MdSettings, MdPerson } from 'react-icons/md';
 
 const Sidebar = () => {
   const router = useRouter();
@@ -29,6 +29,11 @@ const Sidebar = () => {
       title: "Reports",
       path: "/admin/dashboard/reports",
       icon: <MdReport />,
+    },
+    {
+      title: "Feedback",
+      path: "/admin/dashboard/feedback",
+      icon: <MdFeedback />,
     },
     {
       title: "Settings",

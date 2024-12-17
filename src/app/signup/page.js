@@ -4,41 +4,31 @@ import Link from "next/link";
 import { useAuth } from "../../../firebase/auth";
 import Button from "../components/Button";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { doc, setDoc} from "firebase/firestore";
-import { initializeFirebase } from "/firebase/initFirebase"; // Import your Firebase config
+import { useRouter } from "next/navigation"; // Import your Firebase config
 
 
 export default function SignupPage() {
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null) 
   const { signUp } = useAuth();
-  const { firestore } = initializeFirebase();
   const router = useRouter();
 
   async function SignupHandler(){
-    if(!email || !password){
+    let role = "user"; 
+    if(!username || !email || !password){
       setError("Please fill in all fields");
       return;
     }
-
-    try{
-      await signUp(email, password);
-
-      let role = "user"; 
-      if (email === "admin@gmail.com") {
-        role = "admin"; 
+    if (email === "admin@gmail.com") {
+        role = "admin"; // Assign admin role for specific email
       }
 
+    try{
+      await signUp(email, password, username, role);
+
       console.log(email, role);
-
-      // Ensure user document is created with email as document ID
-      const userDocRef = doc(firestore, "userRoles", email); 
-      await setDoc(userDocRef, {
-        role: role, 
-      });
-
       router.push('/home');
     } catch(err) {
       console.error("Error during sign up: ", err);
@@ -51,6 +41,16 @@ export default function SignupPage() {
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
         <div className="border-2 border-ivory p-12 rounded-3xl">
           <div><h4 className="text-white text-[30px]">Create an account</h4></div>
+
+          {/* username input */}
+          <input 
+            className="border-2 text-[12px] bg-black font-body mt-12 text-ivory border-ivory px-4 py-2 w-full rounded-full" 
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="username..." 
+          />
 
           {/* Email input */}
           <input 
