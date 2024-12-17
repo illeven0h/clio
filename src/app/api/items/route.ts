@@ -14,7 +14,7 @@ export type item = {
     access: string;
 }
 
-const defaultItem: item[] = [
+const defaultItems: item[] = [
     {id: "item-1", title: "user item", access: ItemAccess.USER},
     {id: "item-2", title: "user item", access: ItemAccess.USER},
     {id: "item-3", title: "guest user item", access: ItemAccess.GUESTUSER},
@@ -28,8 +28,22 @@ export async function GET(request: NextRequest){
             return new NextResponse("Internal Error", {status: 500,})
         }
 
-        const response = await firestore.collection("Items").get();
-        const items = response.doc.map((doc) => doc.data())
+        const response = await firestore.collection("items").get();
+        const items = response.docs.map((doc) => doc.data())
+        
+        //this is to make sure everything gets stored on the firestore and in case of errors it reverts the updation
+        if(items.length <= 0){
+            const batch = firestore.batch();
+            defaultItems.forEach((item) => {
+                const itemRef = firestore?.collection("items").doc();
+                if (itemRef) batch.set(itemRef, item);
+            });
+            batch.commit();
+
+            return NextResponse.json(defaultItems)
+
+        }
+
 
         return NextResponse.json(items);
     }catch(err){

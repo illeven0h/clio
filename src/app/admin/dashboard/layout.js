@@ -1,5 +1,5 @@
-import Sidebar from '@/app/components/admin-dashboard/sidebar';
-import Navbar from '@/app/components/admin-dashboard/navbar';
+import Sidebar from '../../components/admin-dashboard/sidebar';
+import Navbar from '../../components/admin-dashboard/navbar';
 export default function Layout({children}) {
     return (
         <div className="flex">

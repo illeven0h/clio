@@ -24,7 +24,7 @@ const Nav = () => {
     const pathname = usePathname();
 
     // Define routes where the navbar should not appear
-    const noNavRoutes = ["/", "/admin/dashboard", "/admin/dashboard/users", "/admin/dashboard/content", "/admin/dashboard/reports", "/admin/dashboard/setting", "/admin/dashboard/profile"];
+    const noNavRoutes = ["/","/login","/signup", "/admin/dashboard", "/admin/dashboard/users", "/admin/dashboard/content", "/admin/dashboard/reports", "/admin/dashboard/setting", "/admin/dashboard/profile"];
 
     // Check if the current route matches any in the list
     if (noNavRoutes.includes(pathname)) return null;

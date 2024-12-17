@@ -1,19 +1,40 @@
 "use client";
 import Link from "next/link";
+import { doc,getDoc } from "firebase/firestore";
 import Button from "../components/Button";
 import Image from "next/image";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../firebase/auth";
+import { initializeFirebase } from "/firebase/initFirebase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null) 
   const {login, currentUser} = useAuth();
+  const { signInWithGoogle } = useAuth();
+  const {firestore} = initializeFirebase()
   const router = useRouter();
+  
+  async function fetchUserRole(email) {
+    try {
+      const userDocRef = doc(firestore, "userRoles", email);
+      console.log("Fetching user role for:", email);
+      const userDoc = await getDoc(userDocRef);
 
-  console.log(currentUser)
+      if (userDoc.exists()) {
+        console.log("Role fetched successfully:", userDoc.data().role);
+        return userDoc.data().role;
+      } else {
+        console.error("No such document for email:", email);
+        throw new Error("Role not found");
+      }
+    } catch (error) {
+      console.error("Error fetching user role:", error);
+      return null;
+    }
+  }
 
   async function LoginHandler(){
     if(!email || !password){
@@ -23,13 +44,21 @@ export default function LoginPage() {
 
     try{
      await login(email, password)
-     router.push('/home')
+    
+    const role = await fetchUserRole(email);
+     if (role === "admin") {
+       router.push("/admin/dashboard");
+     } else if (role === "user") {
+       router.push("/home");
+     } else {
+       throw new Error("Unknown role.");
+     }
     }catch(err){
       setError("failed to login the user")
     }
     
   }
-
+ 
   return (
     <div className="flex flex-col justify-center min-h-screen py-2 bg-black">
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
@@ -65,7 +94,18 @@ export default function LoginPage() {
               <hr className="flex-grow border-t border-gray-300" />
             </div>
 
-            <Button text="Continue with google">
+            <Button 
+            onClick={async () => {
+              try {
+                await signInWithGoogle();
+                assignRole(currentUser);
+                checkUserRole(currentUser);
+              } catch (err) {
+                setError("Failed to sign in with Google");
+              }
+            }}
+            
+            text="Continue with google">
               <Image
                 alt="google icon"
                 src="/google.svg"
@@ -81,12 +121,6 @@ export default function LoginPage() {
             </span>
           </p>
 
-          <p className="text-[12px] ">
-            For admin -{" "}
-            <span className="border-b">
-              <Link href="/admin/login">Login</Link>
-            </span>
-          </p>
         </div>
       </main>
     </div>

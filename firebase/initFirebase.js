@@ -1,5 +1,5 @@
 import { getApp, initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAnalytics } from "firebase/analytics";
@@ -16,23 +16,26 @@ const firebaseConfig = {
 
 // Initialize Firebase Services (wrapped in a function)
 export const initializeFirebase = () => {
+  let app, firestore;
   if (!getApps().length) {
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const firestore = getFirestore(app);
-    const storage = getStorage(app);
-
-    let analytics;
-    if (typeof window !== "undefined") {
-      try {
-        analytics = getAnalytics(app);
-      } catch (error) {
-        console.warn("Analytics could not be initialized:", error);
-      }
-    }
-
-    return { auth, firestore, storage, analytics };
+    app = initializeApp(firebaseConfig);
+    firestore = getFirestore(app);
   } else {
-    return { auth: getAuth(), firestore: getFirestore(), storage: getStorage() };
+    app = getApp();
+    firestore = getFirestore();
   }
+
+  const auth = getAuth(app);
+  const storage = getStorage(app);
+
+  let analytics;
+  if (typeof window !== "undefined") {
+    try {
+      analytics = getAnalytics(app);
+    } catch (error) {
+      console.warn("Analytics could not be initialized:", error);
+    }
+  }
+
+  return { auth, firestore, storage, analytics };
 };

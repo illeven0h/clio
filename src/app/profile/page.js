@@ -104,7 +104,7 @@ export default function ProfilePage() {
 
       {/* Username */}
       <div className="w-full font-secondary text-center text-[20px]  text-ivory inline-block mb-2">
-      {currentUser.email}
+      {(currentUser)?currentUser.email : "xyz@gmail.com" }
       </div>
 
       {/* Action Buttons */}

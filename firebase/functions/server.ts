@@ -1,28 +1,20 @@
-
 import { getFirestore } from "firebase-admin/firestore";
-import {cert,initializeApp, ServiceAccount, getApps } from "firebase-admin/app";
+import { cert, initializeApp, getApps } from "firebase-admin/app";
 
 const serviceAccount = require('../serviceAccount.json');
 
-const currentApps = getApps()
-
 let firestore = undefined;
 
-if(currentApps.length > 0) {
+// Initialize Firebase if no app is initialized yet
+if (getApps().length === 0) {
+
     const app = initializeApp({
-        credential: cert(serviceAccount as ServiceAccount)
-    
+        credential: cert(serviceAccount)
     });
     firestore = getFirestore(app);
-
-}else{
-     firestore = getFirestore(currentApps[0]);
+} else {
+    // Use the existing initialized app
+    firestore = getFirestore();
 }
 
-
-export {firestore}
-
-
-
-
-
+export { firestore };

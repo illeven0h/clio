@@ -1,4 +1,4 @@
-import Button from "@/app/components/Button";
+import Button from "../../../components/Button";
 
 export default async function Users() {
   let items = [];
