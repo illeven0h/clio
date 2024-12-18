@@ -84,8 +84,6 @@ export default function LoginPage() {
             onClick={async () => {
               try {
                 await signInWithGoogle();
-                assignRole(currentUser);
-                checkUserRole(currentUser);
               } catch (err) {
                 setError("Failed to sign in with Google");
               }

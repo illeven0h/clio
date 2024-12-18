@@ -1,10 +1,11 @@
 import Button from "../components/Button";
 import Image from "next/image";
+import Nav from "../components/Nav";
 import Link from "next/link";
 export default function Create() {
     return (
         <>
-
+        <Nav className="mt-4" clioClassName ="text-black mt-2 ml-8" logoutClassName="mt-3 mr-8" />
         <div className="h-screen flex flex-col justify-center items-center relative">
 
         {/* Background Image */}

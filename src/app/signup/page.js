@@ -54,7 +54,7 @@ export default function SignupPage() {
 
           {/* Email input */}
           <input 
-            className="border-2 text-[12px] bg-black font-body mt-12 text-ivory border-ivory px-4 py-2 w-full rounded-full" 
+            className="border-2 text-[12px] bg-black font-body mt-4 text-ivory border-ivory px-4 py-2 w-full rounded-full" 
             type="email"
             id="email"
             value={email}

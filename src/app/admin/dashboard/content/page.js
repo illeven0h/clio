@@ -1,6 +1,6 @@
 
 export default function Content(){
   return (
-    <div>content page</div>
+    <h5 className="text-center text-bone text-[24px] mt-8">Content Management</h5>
   )
 }

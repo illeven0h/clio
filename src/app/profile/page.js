@@ -90,6 +90,7 @@ export default function ProfilePage() {
 
   return (
     <>
+    <Nav className="mt-4" clioClassName ="text-bone mt-2 ml-8" logoutClassName="mt-3 mr-8" />
     <div className="bg-[#1B1B1B] pt-16 min-h-screen bg-floralwhite flex flex-col items-center">
       {/* Profile Picture */}
       <div className="py-6">

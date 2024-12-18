@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react";
 import Button from "../components/Button";
+import Nav from "../components/Nav";
 import Image from "next/image";
 import { doc, setDoc} from "firebase/firestore";
 import { initializeFirebase } from "/firebase/initFirebase";// Import Firestore methods
@@ -49,6 +50,8 @@ export default function Feedback() {
   };
 
   return (
+    <>
+    <Nav className="mt-4" clioClassName ="text-black mt-2 ml-8" logoutClassName="mt-3 mr-8" />
     <div className="h-screen flex flex-col justify-center items-center relative">
       {/* Background Image */}
       <Image
@@ -113,5 +116,6 @@ export default function Feedback() {
         <img src="/images/feedback.svg" height={392} width={400} alt="Feedback Illustration" />
       </div>
     </div>
+    </>
   );
 }

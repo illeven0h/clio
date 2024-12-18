@@ -1,16 +1,29 @@
 "use client";
-import Link from "next/link";
-import Button from "../components/Button";
 import Image from "next/image";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { auth } from "../../../firebase/auth";
+import Nav from "../components/Nav"
 
 export default function DashboardUser() {
-
   return (
-    <div className="flex flex-col justify-center min-h-screen py-2 bg-black">
-      dashboard page for users
-    </div>
+        <>
+        <Nav className="mt-4" clioClassName ="text-black mt-2 ml-8" logoutClassName="mt-3 mr-8" />
+        <div className="h-screen flex flex-col justify-center items-center relative">
+
+        {/* Background Image */}
+        <Image
+          src="/images/Union.svg"
+          alt="Polygon Background"
+          layout="fill"
+          objectFit="contain"
+          className="absolute z-[-1] p-4"
+        />
+  
+
+
+        
+        <h4 className=" text-black text-2xl">User Dashboard</h4>
+        </div>
+      
+      </>
   );
 }

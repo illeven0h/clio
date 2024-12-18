@@ -4,7 +4,8 @@ import Link from "next/link"
 export default function Dashboard() {
     return (
         <>
-        <div className="flex gap-4" >
+        <h4 className="mt-8">Dashboard</h4>
+        <div className=" flex gap-4" >
             <div className="mt-8 rounded-xl w-max p-8 border-2 ">
                 <div className="flex flex-col">
                     <h4>Total users</h4>

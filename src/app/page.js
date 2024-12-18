@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Nav from "./components/Nav.js";
 import Image from "next/image";
 import Button from "./components/Button.js";
 import { useAuth } from "/firebase/auth";
@@ -16,6 +17,7 @@ export default function LandingPage() {
 
 
   return (
+    <>
     <div className="h-screen flex flex-col justify-center items-center relative">
 
       {/* Background Image */}
@@ -57,5 +59,6 @@ export default function LandingPage() {
         />
       </div>
     </div>
+    </>
   );
 }

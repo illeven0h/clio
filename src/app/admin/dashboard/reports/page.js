@@ -4,7 +4,7 @@ import Link from "next/link"
 export default function Reports() {
     return (
         <>
-        <h1>Reports</h1>
+        <h5 className="text-center text-bone text-[24px] mt-8">Reports</h5>
         </>
     );
 }
