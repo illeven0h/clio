@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from "react";
-import Nav from "../components/Nav";
+import Nav from "../components/SideBar";
 import Card from "../components/Card";
 import { useAuth } from "../../../firebase/auth";
 

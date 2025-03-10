@@ -2,19 +2,10 @@
 import localFont from "next/font/local";
 import { AuthProvider } from "../../firebase/auth";
 import "./globals.css";
-import Nav from "./components/Nav";
+import Nav from "./components/SideBar";
+import { Montserrat } from "next/font/google";
 
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+const montserrat = Montserrat({ subsets: ["latin"], weight: ["400", "600", "700", "800"],variable: "--font-montserrat", });
 
 export const metadata = {
   title: "clio",
@@ -25,7 +16,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${montserrat.variable} antialiased`}>
         <AuthProvider>
         <main>{children}</main>
         

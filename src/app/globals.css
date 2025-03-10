@@ -1,35 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-@import url('https://fonts.googleapis.com/css2?family=Moon+Walk&family=Zen+Dots&family=Michrome&display=swap');
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+  @import url('https://fonts.googleapis.com/css2?family=Moon+Walk&family=Zen+Dots&family=Michrome&display=swap');
 
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #fefae0;
+    --foreground: #0D0D0F;
   }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: #fefae0;
+      --foreground: #0D0D0F;
+    }
+  }
+
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: var(--font-montserrat);
+  }
+/* Heading Styles */
+h1,h2,h3 {
+  font-size: 3rem; /* Adjust as needed */
+  font-weight: 700; /* Extra Bold */
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: "Moon Walk", "zen dots", "Michroma", sans-serif;
-}
-
-h1, h2, h3 {
-  font-family: "Moon Walk", sans-serif; /* Font for main headings */
-}
 
 h4, h5, h6 {
-  font-family: "Zen Dots", sans-serif; /* Font for secondary headings */
+  font-size: 1.5rem;
+  font-weight: 600; /*semi bold */
 }
 
+/* Paragraph and Other Text */
 p, span, li {
-  font-family: "Michroma", sans-serif; /* Default font for paragraph text */
-}
+  font-weight: 400; /* Regular */
+  }

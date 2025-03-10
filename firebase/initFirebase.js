@@ -1,5 +1,5 @@
 import { getApp, initializeApp, getApps } from "firebase/app";
-import { connectAuthEmulator, getAuth } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAnalytics } from "firebase/analytics";
@@ -14,18 +14,18 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase Services (wrapped in a function)
+// Initialize Firebase Services
 export const initializeFirebase = () => {
-  let app, firestore;
+  let app;
   if (!getApps().length) {
     app = initializeApp(firebaseConfig);
-    firestore = getFirestore(app);
   } else {
     app = getApp();
-    firestore = getFirestore();
   }
 
+  // Ensure Firestore, Auth, and Storage are correctly initialized
   const auth = getAuth(app);
+  const firestore = getFirestore(app);
   const storage = getStorage(app);
 
   let analytics;

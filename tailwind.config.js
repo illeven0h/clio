@@ -8,14 +8,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bone: "#E6E4D5",
-        black: "#000000",
-        ivory: "#FFFDF1",
+        orange: "#FB8B24",
+        black: "#0D0D0F",
+        background: "#fefae0",
+        grey: "#333333",
+        neon: "#CBFF9C",
       },
       fontFamily: {
-        heading: ["Moon Walk", "sans-serif"], // For main headings
-        secondary: ["Zen Dots", "sans-serif"], // For secondary headings
-        body: ["Michroma", "sans-serif"], // For body text
+        heading: ["Montserrat", "sans-serif"],
+        secondary: ["Montser Dots", "sans-serif"], 
+        body: ["Michroma", "sans-serif"], 
       },
     },
   },

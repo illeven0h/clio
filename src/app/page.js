@@ -1,64 +1,53 @@
 "use client";
 import Link from "next/link";
-import Nav from "./components/Nav.js";
-import Image from "next/image";
-import Button from "./components/Button.js";
 import { useAuth } from "/firebase/auth";
 import { useRouter } from "next/navigation";
 
-
 export default function LandingPage() {
-    const {currentUser} = useAuth()
-    const router = useRouter()
+    const { currentUser } = useAuth();
+    const router = useRouter();
 
-  if(currentUser) {
-    router.push('/home')
-   }
+    if (currentUser) {
+        router.push('/home');
+    }
 
+    return (
+        <div className="relative w-full h-screen overflow-hidden">
+            {/* Full-Screen Background Video */}
+            <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute w-full h-full object-cover"
+            >
+                <source src="/video.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+            </video>
 
-  return (
-    <>
-    <div className="h-screen flex flex-col justify-center items-center relative">
+            {/* Dark Overlay for Readability */}
+            <div className="absolute inset-0 bg-black bg-opacity-40"></div>
 
-      {/* Background Image */}
-      <Image
-        src="/images/Union.svg"
-        alt="Polygon Background"
-        layout="fill"
-        objectFit="contain"
-        className="absolute z-[-1] p-4"
-      />
+            {/* Navbar */}
+            <div className="absolute flex items-center justify-between w-full px-12 py-6">
+                <h1 className="text-[34px] font-bold text-white">Clio.</h1>
+                <Link href="/login">
+                    <p className="hover:underline text-lg hover:text-orange font-semibold text-white transition">Login</p>
+                </Link>
+            </div>
 
-      {/* Top Section */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 w-[90%] top-0 flex justify-between items-center h-[100px] 2xl:px-16 px-4">
-        <Link href="/">
-          <h4 className="text-3xl cursor-pointer text-black">Clio</h4>
-        </Link>
-        <Link href= "/login">
-        <Button text = "login" ></Button>
-        </Link>
-      </div>
-
-      {/* Content Wrapper */}
-      <div className="flex flex-col lg:flex-row justify-between items-center gap-8 w-[80%] max-w-screen-xl mx-auto text-center lg:text-left">
-        <div className="text-wrapper">
-          <h1 className="text-black text-4xl leading-tight">Next Gen Marketing Assistant</h1>
-          <p className="text-gray-600 font-[Michroma] text-lg mb-2">
-            Step into the future of marketing
-          </p>
-          <Link href = "/spotlight">
-          <Button text ="Spotlight"></Button>
-          </Link>
+            {/* Hero Content */}
+            <div className="absolute bottom-10 left-10 max-w-[90%] sm:left-5 px-8 py-16 text-left">
+                <h1 className="text-white text-5xl font-bold leading-tight">Next Gen Marketing Assistant</h1>
+                <h4 className="text-gray-300 text-lg mt-3 max-w-lg">
+                    Changing the way brands create and connect through AI-powered marketing.
+                </h4>
+                <Link href="/login">
+                    <h4 className="mt-6 shadow-[4px_4px_0px_0px_#333] border-2 border-grey inline-block bg-orange text-gray-900 px-8 py-2 rounded-full font-semibold transition hover:shadow-lg hover:scale-105">
+                        Create
+                    </h4>
+                </Link>
+            </div>
         </div>
-        <Image
-          src="/images/illustration_LP.svg"
-          alt="Illustration"
-          height={400}
-          width={300}
-          className="lg:w-auto w-[90%]"
-        />
-      </div>
-    </div>
-    </>
-  );
+    );
 }
