@@ -2,7 +2,7 @@ import { getApp, initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAnalytics } from "firebase/analytics";
+// import { getAnalytics } from "firebase/analytics";
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -28,14 +28,14 @@ export const initializeFirebase = () => {
   const firestore = getFirestore(app);
   const storage = getStorage(app);
 
-  let analytics;
-  if (typeof window !== "undefined") {
-    try {
-      analytics = getAnalytics(app);
-    } catch (error) {
-      console.warn("Analytics could not be initialized:", error);
-    }
-  }
+  // let analytics;
+  // if (typeof window !== "undefined") {
+  //   try {
+  //     analytics = getAnalytics(app);
+  //   } catch (error) {
+  //     console.warn("Analytics could not be initialized:", error);
+  //   }
+  // }
 
-  return { auth, firestore, storage, analytics };
+  return { auth, firestore, storage };
 };

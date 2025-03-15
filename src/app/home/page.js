@@ -25,7 +25,7 @@ export default function Home() {
         if (!res.ok) throw new Error("Failed to fetch videos");
 
         const data = await res.json();
-        console.log("Fetched Videos:", data); // Debugging log
+        console.log("Fetched Videos:", data); //Debugging log
         
         // Transform the API response to match the expected video format
         const formattedVideos = data.videos.map(video => {

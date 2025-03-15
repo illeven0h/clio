@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { FaShare, FaHeart, FaComments, FaTimes, FaPaperPlane } from "react-icons/fa";
 import { useState } from "react";
+import { CldVideoPlayer } from 'next-cloudinary';
 import VideoEditor from "./VideoEditor"; // Import the VideoEditor component
 
 export default function VideoGrid({ videos: initialVideos }) {
@@ -189,7 +190,8 @@ export default function VideoGrid({ videos: initialVideos }) {
                 <div className="p-2 bg-background rounded-sm text-grey">
                   <div className="flex flex-col gap-1 items-center">
                     <h3 className="text-sm gap-4 font-normal">{selectedVideo.description || "Video"}</h3>
-                    <div className="flex gap-4">
+                    <div className="px-8 py-2 flex justify-between w-full">
+                    <div className="flex text-center items-center gap-4">
                       <button 
                         className={`flex gap-1 items-center ${selectedVideo.liked ? 'text-red-500' : ''}`}
                         onClick={handleLike}
@@ -230,12 +232,16 @@ export default function VideoGrid({ videos: initialVideos }) {
                         <span>{selectedVideo.comments || 0}</span>
                       </button>
                     </div>
+
+                    {/* edit button */}
                     <button 
-                      className="bg-orange text-semibold px-3 py-2 rounded-full border-3 border-grey"
+                      className="bg-neon font-semibold shadow-[3px_3px_0px_0px_black] px-3 py-2 rounded-xl border-2  border-grey"
                       onClick={handleEditVideo}
                     >
                       edit video
                     </button>
+
+                    </div>
                   </div>
                 </div>
               </div>

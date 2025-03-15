@@ -368,7 +368,7 @@ export default function VideoEditor({ videos, onBack, singleVideoMode = false })
               ref={videoRef}
               width="600"
               controls
-              className=" rounded-xl  mt-4"
+              className="h-60 rounded-xl  mt-4"
               src={selectedVideo.secure_url || selectedVideo.src}
               crossOrigin="anonymous"
             ></video>
@@ -481,7 +481,7 @@ export default function VideoEditor({ videos, onBack, singleVideoMode = false })
                 ref={outputVideoRef}
                 width="600" 
                 controls 
-                className=" rounded-xl mt-2"
+                className="h-48 rounded-xl mt-2"
                 key={outputVideo} // Force re-render when url changes
                 autoPlay
               >
