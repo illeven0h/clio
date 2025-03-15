@@ -36,7 +36,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
     });
   
     return () => unsubscribe();
-  }, [auth]);
+  }, [auth, firestore]);
 
   // Close when clicking outside
   useEffect(() => {

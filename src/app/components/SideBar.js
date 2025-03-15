@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   MdOutlineExplore, MdOutlineStar, MdOutlineVideoLibrary, 
   MdOutlineArchive, MdOutlineFavorite, MdOutlineDashboard 
@@ -35,7 +36,7 @@ const Sidebar = () => {
   return (
     <div className="h-screen w-56 fixed text-orange p-6">
       {/* Sidebar Header */}
-      <img src="/logo.png" alt="logo" width={60} height={60} />
+      <Image src="/logo.png" alt="logo" width={60} height={60} />
       {/* <h1 className="text-[24px] text-black">Clio.</h1> */}
       {/* Menu Items */}
       <ul className="mt-6 space-y-6">
