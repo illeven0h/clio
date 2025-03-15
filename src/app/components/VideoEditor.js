@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useState, useEffect, useRef } from "react";
 import { FaTimes } from "react-icons/fa"; // Import FaTimes for back button
 
