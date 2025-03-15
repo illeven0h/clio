@@ -15,8 +15,14 @@ pnpm dev
 # or
 bun dev
 
+```
 
 ## 🌍 Deployed on Vercel
 
-🔗 **Live Demo:** [Clio on Vercel](https://clio-ou5wyujg3-imans-projects-1e2c64dd.vercel.app/)  
-🚀 **Powered by [Vercel](https://vercel.com/)** for seamless deployment.
+You can view the live project here:  
+
+🔗 **Live Demo:** 
+[Clio on Vercel](https://clio-ou5wyujg3-imans-projects-1e2c64dd.vercel.app/)  
+
+This project is hosted on [Vercel](https://vercel.com/) for seamless deployment and performance.
+
