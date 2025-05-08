@@ -1,10 +1,9 @@
-import { getApp, initializeApp, getApps } from "firebase/app";
+// src/firebase/initFirebase.js
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-// import { getAnalytics } from "firebase/analytics";
 
-// Firebase Configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -14,28 +13,10 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase Services
 export const initializeFirebase = () => {
-  let app;
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
-  }
-
-  // Ensure Firestore, Auth, and Storage are correctly initialized
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const firestore = getFirestore(app);
   const storage = getStorage(app);
-
-  // let analytics;
-  // if (typeof window !== "undefined") {
-  //   try {
-  //     analytics = getAnalytics(app);
-  //   } catch (error) {
-  //     console.warn("Analytics could not be initialized:", error);
-  //   }
-  // }
-
   return { auth, firestore, storage };
 };
