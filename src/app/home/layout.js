@@ -47,7 +47,7 @@ const HomeLayout = ({ children }) => {
 
         {/* Dynamic Page Content */}
         {children}
-        <FloatingInput />
+        {pathname !== "/home/chat" && <FloatingInput />}
         
         {/* Settings Panel */}
         <SettingsPanel 

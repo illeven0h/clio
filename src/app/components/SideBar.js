@@ -28,7 +28,7 @@ const Sidebar = () => {
     {
       title: "Analytics",
       subItems: [
-        { title: "Dashboard", path: "/analytics/dashboard", icon: <MdOutlineDashboard /> },
+        { title: "Dashboard", path: "/home/analytics/dashboard", icon: <MdOutlineDashboard /> },
       ],
     },
   ];
