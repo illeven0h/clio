@@ -1,8 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
-import AdminSidebar from "../components/AdminSideBar";
-import FloatingInput from "../components/FloatingInput";
+import AdminSidebar from "../components/AdminSidebar";
 import DropDownAvatar from "../components/DropDownAvatar";
 import SettingsPanel from "../components/SettingsPanel";
 import FeedbackPanel from "../components/FeedbackPanel"; // Import the FeedbackPanel
