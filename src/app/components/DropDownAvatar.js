@@ -86,7 +86,7 @@ export default function DropDownAvatar({ onSettingsClick, onFeedbackClick }) {
                 <FiSettings size={16} /> Settings
               </a>
             </li>
-            <li>
+            {/* <li>
               <a 
                 href="#" 
                 className="flex items-center gap-2 px-4 py-2 hover:bg-orange dark:hover:text-white"
@@ -94,7 +94,7 @@ export default function DropDownAvatar({ onSettingsClick, onFeedbackClick }) {
               >
                 <FiMessageCircle size={16} /> User Feedback
               </a>
-            </li>
+            </li> */}
             <li>
               <a href="#" className="flex items-center gap-2 px-4 py-2 hover:bg-orange dark:hover:text-white">
                 <FiHelpCircle size={16} /> Help

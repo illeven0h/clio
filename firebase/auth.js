@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       }
       return role;
     } catch (error) {
-      console.error("Error getting user role:", error);
+      // console.error("Error getting user role:", error);
       throw error;
     }
   };

@@ -2,9 +2,10 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+
 import { 
   MdOutlineExplore, MdOutlineStar, MdOutlineVideoLibrary, 
-  MdOutlineArchive, MdOutlineFavorite, MdOutlineDashboard 
+  MdOutlineArchive, MdOutlineFavorite, MdOutlineDashboard, MdFeedback 
 } from "react-icons/md";
 
 const Sidebar = () => {
@@ -30,7 +31,14 @@ const Sidebar = () => {
       subItems: [
         { title: "Dashboard", path: "/home/analytics/dashboard", icon: <MdOutlineDashboard /> },
       ],
+      
     },
+    {
+      title: "Feedback",
+      subItems: [
+        { title: "Feedback", path: "/home/feedback", icon: <MdFeedback /> },
+      ],
+    }
   ];
 
   return (

@@ -14,7 +14,7 @@ export async function GET() {
     // Ensure correct folder structure
     const response = await cloudinary.v2.search
       .expression(`resource_type:video AND folder:${folder}`)
-      .max_results(18)
+      .max_results(148)
       .execute();
 
     console.log("Cloudinary API Response:", response); // Debugging log

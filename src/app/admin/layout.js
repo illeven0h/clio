@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
-import Sidebar from "../components/SideBar";
+import AdminSidebar from "../components/AdminSideBar";
 import FloatingInput from "../components/FloatingInput";
 import DropDownAvatar from "../components/DropDownAvatar";
 import SettingsPanel from "../components/SettingsPanel";
@@ -9,19 +9,15 @@ import FeedbackPanel from "../components/FeedbackPanel"; // Import the FeedbackP
 
 const getPageTitle = (pathname) => {
   const pageTitles = {
-    "/home": "Featured",
-    "/home/spotlight": "Spotlight",
-    "/home/explore/recent": "Recent",
-    "/home/explore/liked": "Liked",
-    "/home/library/all": "All Videos",
-    "/home/library/uploads": "Uploads",
-    "/home/library/archives": "Archives",
-    "/home/analytics/dashboard": "Analytics Dashboard",
+    "/admin": "Videos Management",
+    "/admin/feedback": "User Feedbacks",
+    "/admin/comments": "User Comments",
+    "/admin/dashboard": "Admin Dashboard",
   };
-  return pageTitles[pathname] || "Clio";
+  return pageTitles[pathname] || "Admin";
 };
 
-const HomeLayout = ({ children }) => {
+const AdminLayout = ({ children }) => {
   const pathname = usePathname();
   const pageTitle = getPageTitle(pathname);
   
@@ -32,7 +28,7 @@ const HomeLayout = ({ children }) => {
   return (
     <div className="flex h-screen">
       {/* Sidebar (Fixed Width) */}
-      <Sidebar />
+      <AdminSidebar />
       
       {/* Main Content Area */}
       <div className="flex-1 pt-4 ml-56">  {/* <-- Added `ml-64` to push content right */}
@@ -47,22 +43,16 @@ const HomeLayout = ({ children }) => {
 
         {/* Dynamic Page Content */}
         {children}
-        {pathname !== "/home/chat" && <FloatingInput />}
-        
-        {/* Settings Panel */}
+
         <SettingsPanel 
           isOpen={isSettingsOpen} 
           onClose={() => setIsSettingsOpen(false)} 
         />
+
         
-        {/* Feedback Panel */}
-        <FeedbackPanel 
-          isOpen={isFeedbackOpen} 
-          onClose={() => setIsFeedbackOpen(false)} 
-        />
       </div>
     </div>
   );
 };
 
-export default HomeLayout;
+export default AdminLayout;
