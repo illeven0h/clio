@@ -14,7 +14,7 @@ export default function FloatingInput() {
 
     // Basic checks for prompt quality
     if (
-      trimmedPrompt.length < 10 ||                         // too short
+      trimmedPrompt.length < 3 ||                         // too short
       /^[a-zA-Z]*$/.test(trimmedPrompt) ||                // one word only
       /^[a-z]{1,5}$/.test(trimmedPrompt.toLowerCase()) || // likely junk
       /(asdf|qwer|test|lorem|hello|1234)/i.test(trimmedPrompt) // common junk
@@ -33,11 +33,25 @@ export default function FloatingInput() {
       const response = await fetch("/api/generatedVideos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt: trimmedPrompt }),
+        // Add a timeout for the fetch request
+        signal: AbortSignal.timeout(120000) // 2 minute timeout
       });
 
-      const data = await response.json();
-      console.log("Response received:", data);
+      // Check if response exists before attempting to parse
+      if (!response) {
+        throw new Error('No response received from server');
+      }
+
+      // Parse the response
+      let data;
+      try {
+        data = await response.json();
+        console.log("Response received:", data);
+      } catch (parseError) {
+        console.error("Error parsing response:", parseError);
+        throw new Error('Failed to parse server response');
+      }
       
       if (!response.ok) {
         // Show detailed debug info if available
@@ -73,8 +87,8 @@ export default function FloatingInput() {
   };
 
   return (
-    <div className="fixed z-10 bottom-10 left-1/2 transform -translate-x-1/2 w-full sm:w-[500px] md:w-[600px] lg:w-[700px] xl:w-[750px] bg-background shadow-[6px_6px_0px_0px_#333333] rounded-[40px] p-3 border-4 border-grey cursor-pointer flex items-center gap-3r">
-      <div className="flex items-center gap-3 w-full">
+    <div className="fixed z-10 bottom-10 left-1/2 transform -translate-x-1/2 w-full sm:w-[500px] md:w-[600px] lg:w-[700px] xl:w-[750px] bg-background p-4 border-4 border-grey rounded-[40px] shadow-[6px_6px_0px_0px_#333333]">
+      <div className="flex items-center gap-3">
         <input
           type="text"
           value={prompt}
@@ -97,7 +111,11 @@ export default function FloatingInput() {
         </button>
       </div>
 
-      {loading && <p className="mt-2 text-sm text-gray-500">Generating video... This may take a minute or two.</p>}
+      {loading && (
+        <p className="mt-2 text-sm text-gray-500">
+          Generating video... This may take up to 2 minutes. Please be patient.
+        </p>
+      )}
       
       {error && (
         <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">

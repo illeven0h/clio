@@ -12,20 +12,34 @@ export default function VideoEditor({ videos, onBack, singleVideoMode = false })
   const [processing, setProcessing] = useState(false);
   const [outputVideo, setOutputVideo] = useState(null);
   const [error, setError] = useState(null);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [thumbnails, setThumbnails] = useState([]);
+  const [isDraggingStart, setIsDraggingStart] = useState(false);
+  const [isDraggingEnd, setIsDraggingEnd] = useState(false);
+  const [isDraggingMid, setIsDraggingMid] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [previewTime, setPreviewTime] = useState(0);
   
   // Refs for handling video and canvas operations
   const videoRef = useRef(null);
+  const timelineRef = useRef(null);
   const canvasRef = useRef(null);
   const outputVideoRef = useRef(null);
   const streamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const startHandleRef = useRef(null);
+  const endHandleRef = useRef(null);
+  const selectionRef = useRef(null);
 
   // Set end time when a video is selected
   useEffect(() => {
     if (selectedVideo && videoRef.current) {
       videoRef.current.onloadedmetadata = () => {
-        setEndTime(videoRef.current.duration);
+        const duration = videoRef.current.duration;
+        setVideoDuration(duration);
+        setEndTime(duration);
+        generateThumbnails();
       };
     }
   }, [selectedVideo]);
@@ -59,6 +73,168 @@ export default function VideoEditor({ videos, onBack, singleVideoMode = false })
       setSelectedVideo(videos[0]);
     }
   }, [singleVideoMode, videos, selectedVideo]);
+
+  // Set up mouse events for trimmer
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!timelineRef.current || (!isDraggingStart && !isDraggingEnd && !isDraggingMid)) return;
+      
+      const timelineRect = timelineRef.current.getBoundingClientRect();
+      const timelineWidth = timelineRect.width;
+      const relativeX = Math.max(0, Math.min(e.clientX - timelineRect.left, timelineWidth));
+      const percentage = relativeX / timelineWidth;
+      const timePosition = percentage * videoDuration;
+      
+      if (isDraggingStart) {
+        // Don't let start handle go past end handle
+        if (timePosition < endTime) {
+          setStartTime(timePosition);
+          // Also update video preview time
+          setPreviewTime(timePosition);
+          if (videoRef.current) {
+            videoRef.current.currentTime = timePosition;
+          }
+        }
+      } else if (isDraggingEnd) {
+        // Don't let end handle go before start handle
+        if (timePosition > startTime) {
+          setEndTime(timePosition);
+          // Also update video preview time
+          setPreviewTime(timePosition);
+          if (videoRef.current) {
+            videoRef.current.currentTime = timePosition;
+          }
+        }
+      } else if (isDraggingMid) {
+        // Move both handles together, keeping their distance constant
+        const selectionWidth = endTime - startTime;
+        const newStartTime = Math.max(0, Math.min(percentage * videoDuration - dragOffset, videoDuration - selectionWidth));
+        const newEndTime = Math.min(videoDuration, newStartTime + selectionWidth);
+        
+        setStartTime(newStartTime);
+        setEndTime(newEndTime);
+        
+        // Update preview
+        setPreviewTime(newStartTime + selectionWidth / 2);
+        if (videoRef.current) {
+          videoRef.current.currentTime = newStartTime + selectionWidth / 2;
+        }
+      }
+    };
+    
+    const handleMouseUp = () => {
+      setIsDraggingStart(false);
+      setIsDraggingEnd(false);
+      setIsDraggingMid(false);
+    };
+    
+    if (isDraggingStart || isDraggingEnd || isDraggingMid) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingStart, isDraggingEnd, isDraggingMid, startTime, endTime, videoDuration, dragOffset]);
+
+  // Add option to choose text position
+  const [textPosition, setTextPosition] = useState('center');
+  
+  // Generate thumbnails for the timeline
+  const generateThumbnails = async () => {
+    if (!videoRef.current || !selectedVideo) return;
+    
+    const video = videoRef.current;
+    const duration = video.duration;
+    const thumbnailCount = 10; // Number of thumbnails to generate
+    const interval = duration / thumbnailCount;
+    const thumbnailsArray = [];
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 100; // thumbnail width
+    canvas.height = 56; // thumbnail height
+    const ctx = canvas.getContext('2d');
+    
+    for (let i = 0; i < thumbnailCount; i++) {
+      const time = i * interval;
+      video.currentTime = time;
+      
+      // Wait for the video to seek to the time
+      await new Promise(resolve => {
+        const seeked = () => {
+          video.removeEventListener('seeked', seeked);
+          resolve();
+        };
+        video.addEventListener('seeked', seeked);
+      });
+      
+      // Draw frame to canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Get data URL from canvas
+      const thumbnail = canvas.toDataURL('image/jpeg');
+      thumbnailsArray.push({ time, src: thumbnail });
+    }
+    
+    setThumbnails(thumbnailsArray);
+    
+    // Reset video to start
+    video.currentTime = 0;
+  };
+
+  // Handle timeline click to set preview position
+  const handleTimelineClick = (e) => {
+    if (!timelineRef.current || isDraggingStart || isDraggingEnd || isDraggingMid) return;
+    
+    const timelineRect = timelineRef.current.getBoundingClientRect();
+    const timelineWidth = timelineRect.width;
+    const relativeX = e.clientX - timelineRect.left;
+    const percentage = relativeX / timelineWidth;
+    const clickTime = percentage * videoDuration;
+    
+    setPreviewTime(clickTime);
+    if (videoRef.current) {
+      videoRef.current.currentTime = clickTime;
+    }
+  };
+
+  // Handle start handle mouse down
+  const handleStartDragStart = (e) => {
+    e.stopPropagation();
+    setIsDraggingStart(true);
+  };
+
+  // Handle end handle mouse down
+  const handleEndDragStart = (e) => {
+    e.stopPropagation();
+    setIsDraggingEnd(true);
+  };
+
+  // Handle selection area mouse down
+  const handleMidDragStart = (e) => {
+    e.stopPropagation();
+    
+    if (!timelineRef.current) return;
+    
+    const timelineRect = timelineRef.current.getBoundingClientRect();
+    const timelineWidth = timelineRect.width;
+    const relativeX = e.clientX - timelineRect.left;
+    const percentage = relativeX / timelineWidth;
+    const clickTime = percentage * videoDuration;
+    
+    // Calculate offset from click position to start time
+    setDragOffset(clickTime - startTime);
+    setIsDraggingMid(true);
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds % 1) * 100);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+  };
 
   const applyFilter = (context, filter) => {
     switch (filter) {
@@ -245,14 +421,34 @@ export default function VideoEditor({ videos, onBack, singleVideoMode = false })
             // Reset filter for text overlay
             ctx.filter = "none";
             
-            // Add text overlay if specified
+            // Add text overlay if specified - with position options
             if (overlayText) {
               ctx.font = '30px Arial';
               ctx.fillStyle = 'white';
               ctx.strokeStyle = 'black';
               ctx.lineWidth = 2;
-              ctx.strokeText(overlayText, 20, 50);
-              ctx.fillText(overlayText, 20, 50);
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              
+              // Position text based on selected position
+              let textX = canvas.width / 2;
+              let textY = canvas.height / 2;
+              
+              switch(textPosition) {
+                case 'top':
+                  textY = 50;
+                  break;
+                case 'bottom':
+                  textY = canvas.height - 50;
+                  break;
+                case 'center':
+                default:
+                  // Keep the default center position
+                  break;
+              }
+              
+              ctx.strokeText(overlayText, textX, textY);
+              ctx.fillText(overlayText, textX, textY);
             }
             
             lastDrawTime = timestamp;
@@ -369,9 +565,14 @@ export default function VideoEditor({ videos, onBack, singleVideoMode = false })
               ref={videoRef}
               width="600"
               controls
-              className="h-60 rounded-xl  mt-4"
+              className="h-60 rounded-xl mt-4"
               src={selectedVideo.secure_url || selectedVideo.src}
               crossOrigin="anonymous"
+              onTimeUpdate={() => {
+                if (videoRef.current) {
+                  setPreviewTime(videoRef.current.currentTime);
+                }
+              }}
             ></video>
           )}
           </div>
@@ -381,87 +582,130 @@ export default function VideoEditor({ videos, onBack, singleVideoMode = false })
             style={{ display: 'none' }}
           ></canvas>
 
+          {/* Video Trimmer UI */}
+          {selectedVideo && videoDuration > 0 && (
+            <div className="mx-6 md:mx-12 mt-8">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-medium">{formatTime(startTime)}</span>
+                <span className="text-xs font-medium">Current: {formatTime(previewTime)}</span>
+                <span className="text-xs font-medium">{formatTime(endTime || videoDuration)}</span>
+              </div>
+              
+              {/* Timeline container */}
+              <div 
+                ref={timelineRef}
+                className="relative h-16 bg-gray-200 rounded-lg cursor-pointer overflow-hidden"
+                onClick={handleTimelineClick}
+              >
+                {/* Thumbnails */}
+                <div className="absolute top-0 left-0 w-full h-full flex">
+                  {thumbnails.map((thumb, index) => (
+                    <div 
+                      key={index} 
+                      className="h-full" 
+                      style={{ 
+                        width: `${100 / thumbnails.length}%`,
+                        backgroundImage: `url(${thumb.src})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                  ))}
+                </div>
+                
+                {/* Timeline cursor */}
+                <div 
+                  className="absolute top-0 h-full w-px bg-neon z-20"
+                  style={{ 
+                    left: `${(previewTime / videoDuration) * 100}%`,
+                  }}
+                />
+                
+                {/* Selection area */}
+                <div 
+                  ref={selectionRef}
+                  className="absolute top-0 h-full bg-neon bg-opacity-30 z-10 cursor-move"
+                  style={{ 
+                    left: `${(startTime / videoDuration) * 100}%`,
+                    width: `${((endTime - startTime) / videoDuration) * 100}%`
+                  }}
+                  onMouseDown={handleMidDragStart}
+                >
+                  {/* Drag handles */}
+                  <div 
+                    ref={startHandleRef}
+                    className="absolute left-0 top-0 w-3 h-full bg-neon cursor-ew-resize"
+                    onMouseDown={handleStartDragStart}
+                  />
+                  <div 
+                    ref={endHandleRef}
+                    className="absolute right-0 top-0 w-3 h-full bg-neon cursor-ew-resize"
+                    onMouseDown={handleEndDragStart}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* Trimming Inputs */}
-          <div className="mx-20 mt-4 items-center justify-between grid grid-cols-2 ">
-            <div >
-              <label className="block mb-1">Start Time (seconds):</label>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={startTime}
-                onChange={(e) => setStartTime(Math.max(0, parseFloat(e.target.value) || 0))}
-                className="border-2  border-grey shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] bg-transparent outline-none rounded-xl px-4 py-2 w-1/2"
-              />
-            </div>
-            
-            <div className="justify-self-end">
-              <label className=" block mb-1">End Time (seconds):</label>
-              <input
-                type="number"
-                min={parseFloat(startTime) + 0.1}
-                step="0.1"
-                value={endTime || ""}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value) && value > startTime) {
-                    setEndTime(value);
-                  }
-                }}
-                className="border-2 border-grey shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] bg-transparent outline-none rounded-xl px-4  py-2 "
-              />
-            </div>
-          </div>
-          {/* Speed Control  and filter options*/}
+          {/* Speed Control and filter options */}
           <div className="flex justify-between items-center">
-          <div className="mx-20 mt-4">
-            <label className="block mb-1 ">
-              Playback Speed:</label>
-            <select
-              value={speed}
-              onChange={(e) => setSpeed(e.target.value)}
-              className="border-2 border-grey bg-transparent outline-none rounded-xl px-2 shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] py-2 "
-            >
-              <option className="bg-background hover:bg-orange hover:text-white" value="0.25">0.25x (Slow)</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="0.5">0.5x (Slow)</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="0.75">0.75x (Slow)</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="1">1x (Normal)</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="1.25">1.25x (Fast)</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="1.5">1.5x (Fast)</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="2">2x (Fast)</option>
-            </select>
+            <div className="mx-20 mt-4">
+              <label className="block mb-1">
+                Playback Speed:</label>
+              <select
+                value={speed}
+                onChange={(e) => setSpeed(e.target.value)}
+                className="border-2 border-grey bg-transparent outline-none rounded-xl px-2 shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] py-2"
+              >
+                <option className="bg-background hover:bg-orange hover:text-white" value="0.25">0.25x (Slow)</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="0.5">0.5x (Slow)</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="0.75">0.75x (Slow)</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="1">1x (Normal)</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="1.25">1.25x (Fast)</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="1.5">1.5x (Fast)</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="2">2x (Fast)</option>
+              </select>
+            </div>
+
+            {/* Filters Dropdown */}
+            <div className="mx-20 mt-4">
+              <label className="block mb-1">Apply Filter:</label>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="border-2 border-grey bg-transparent outline-none rounded-xl px-2 shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] py-2"
+              >
+                <option className="bg-background hover:bg-orange hover:text-white" value="none">None</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="grayscale">Grayscale</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="sepia">Sepia</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="contrast">High Contrast</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="brightness">Brightness</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="blur">Blur</option>
+              </select>
+            </div>
           </div>
 
-          {/* Filters Dropdown */}
-          <div className="mx-20 mt-4">
-            <label className="block mb-1">Apply Filter:</label>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="border-2 border-grey bg-transparent outline-none rounded-xl px-2 shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] py-2"
-            >
-              <option className="bg-background hover:bg-orange hover:text-white" value="none">None</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="grayscale">Grayscale</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="sepia">Sepia</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="contrast">High Contrast</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="brightness">Brightness</option>
-              <option className="bg-background hover:bg-orange hover:text-white" value="blur">Blur</option>
-            </select>
-          </div>
-          </div>
-          
-
-          {/* Text Overlay Input */}
+          {/* Text Overlay Input with Position selector */}
           <div className="mx-20 mt-4">
             <label className="block mb-1">Overlay Text:</label>
-            <input
-              type="text"
-              value={overlayText}
-              onChange={(e) => setOverlayText(e.target.value)}
-              className="border-2 border-grey bg-transparent outline-none rounded-xl px-4 shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] py-2 w-full"
-              placeholder="Add text to overlay on video"
-            />
+            <div className="flex items-center gap-4">
+              <input
+                type="text"
+                value={overlayText}
+                onChange={(e) => setOverlayText(e.target.value)}
+                className="border-2 border-grey bg-transparent outline-none rounded-xl px-4 shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] py-2 flex-grow"
+                placeholder="Add text to overlay on video"
+              />
+              <select
+                value={textPosition}
+                onChange={(e) => setTextPosition(e.target.value)}
+                className="border-2 border-grey bg-transparent outline-none rounded-xl px-2 shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] py-2"
+              >
+                <option className="bg-background hover:bg-orange hover:text-white" value="top">Top</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="center">Center</option>
+                <option className="bg-background hover:bg-orange hover:text-white" value="bottom">Bottom</option>
+              </select>
+            </div>
           </div>
 
           {/* Process Button */}
@@ -475,22 +719,21 @@ export default function VideoEditor({ videos, onBack, singleVideoMode = false })
 
           {/* Output Video */}
           {outputVideo && (
-            <div className="mt-6 p-4 border rounded-xl ">
+            <div className="mt-6 p-4 border rounded-xl">
               <h4 className="font-semibold">Edited Video:</h4>
               <div className="flex items-center justify-center">
-              <video 
-                ref={outputVideoRef}
-                width="600" 
-                controls 
-                className="h-48 rounded-xl mt-2"
-                key={outputVideo} // Force re-render when url changes
-                autoPlay
-              >
-                <source src={outputVideo} type="video/webm" />
-                <source src={outputVideo} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-
+                <video 
+                  ref={outputVideoRef}
+                  width="600" 
+                  controls 
+                  className="h-48 rounded-xl mt-2"
+                  key={outputVideo} // Force re-render when url changes
+                  autoPlay
+                >
+                  <source src={outputVideo} type="video/webm" />
+                  <source src={outputVideo} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
               <div className="mt-4 flex space-x-4">
                 <a 

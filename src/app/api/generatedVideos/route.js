@@ -1,4 +1,3 @@
-// app/api/generateVideos/route.js
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
@@ -14,7 +13,7 @@ export async function POST(request) {
       );
     }
 
-    console.log('Sending request to huggingface...');
+    console.log('Sending request to Segmind...');
 
     // Create request payload following the Python example
     const payload = {
@@ -28,63 +27,82 @@ export async function POST(request) {
     
     console.log('Request payload:', JSON.stringify(payload));
 
+    if (!process.env.SEGMIND_API_KEY || !process.env.SEGMIND_API_URL) {
+      console.error('Missing Segmind API key or URL in environment variables');
+      return NextResponse.json(
+        { error: 'Server configuration error', details: 'Missing API credentials' },
+        { status: 500 }
+      );
+    }
+
     // Set up headers like in the Python example
     const headers = {
-      'x-api-key': process.env.SEGMIND_API_KEY, // Make sure this is set in your .env.local
+      'x-api-key': process.env.SEGMIND_API_KEY,
       'Accept': 'video/mp4',
       'Content-Type': 'application/json'
     };
 
-    // Make the API request
-    const response = await fetch(process.env.SEGMIND_API_URL, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(payload)
-    });
+    // Make the API request with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
+    try {
+      const response = await fetch(process.env.SEGMIND_API_URL, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      console.log(`Response status: ${response.status}`);
 
-    console.log(`Response status: ${response.status}`);
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        console.log("Rate limit hit. Please wait before making more requests.");
+      if (!response.ok) {
+        if (response.status === 429) {
+          console.log("Rate limit hit. Please wait before making more requests.");
+          return NextResponse.json(
+            { error: 'Rate limit hit. Please wait before making more requests.' },
+            { status: 429 }
+          );
+        }
+        
+        const errorText = await response.text();
+        console.error(`HTTP error: ${response.status} - ${errorText}`);
+        
         return NextResponse.json(
-          { error: 'Rate limit hit. Please wait before making more requests.' },
-          { status: 429 }
+          { error: `Error from Segmind API: ${response.status}`, details: errorText },
+          { status: response.status }
         );
       }
+
+      // Get video binary data
+      const videoBuffer = await response.arrayBuffer();
       
-      const errorText = await response.text();
-      console.error(`HTTP error: ${response.status} - ${errorText}`);
+      // Convert ArrayBuffer to Base64
+      const videoBase64 = Buffer.from(videoBuffer).toString('base64');
+      console.log('Video buffer size:', videoBuffer.byteLength);
       
-      return NextResponse.json(
-        { error: `Error from Segmind API: ${response.status}`, details: errorText },
-        { status: response.status }
-      );
+      // Return the video as base64 data URL
+      return NextResponse.json({ 
+        success: true,
+        videoData: videoBase64
+      });
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        return NextResponse.json(
+          { error: 'Request timeout', details: 'The API request took too long to respond' },
+          { status: 504 }
+        );
+      }
+      throw fetchError; // rethrow to be caught by outer try/catch
     }
-
-    // Get video binary data
-    const videoBuffer = await response.arrayBuffer();
-    
-    // Convert ArrayBuffer to Base64
-    const videoBase64 = Buffer.from(videoBuffer).toString('base64');
-    console.log('Video buffer size:', videoBuffer.byteLength);
-    
-    // Return the video as base64 data URL
-    return NextResponse.json({ 
-      success: true,
-      videoData: videoBase64
-    });
-
-    console.log('Response content-type:', response.headers.get('content-type'));
-    
-
-    
   } catch (error) {
     console.error('Error generating video:', error);
     return NextResponse.json(
       { 
         error: 'Failed to generate video', 
-        details: error.message 
+        details: error.message || 'An unknown error occurred'
       },
       { status: 500 }
     );
