@@ -3,17 +3,15 @@ import Link from "next/link";
 import Image from "next/image";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-
 import { useAuth } from "../../../firebase/auth";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user"); // Role selection during signup
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { login, signUp, signInWithGoogle } = useAuth();
+  const { currentUser, userRole, login, signUp, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   const getUsernameFromEmail = (email) => email.split("@")[0];
@@ -34,7 +32,7 @@ export default function AuthPage() {
         router.push(role === "admin" ? "/admin" : "/home");
       } else {
         const username = getUsernameFromEmail(email);
-        const { role: userRole } = await signUp(email, password, username, role);
+        const { role: userRole } = await signUp(email, password, username); // Default role is "user"
         router.push(userRole === "admin" ? "/admin" : "/home");
       }
     } catch (error) {
@@ -72,7 +70,7 @@ export default function AuthPage() {
 
   return (
     <div className="relative min-h-screen">
-      {/* Admin Button Top-Right */}
+      {/* Admin Button Top-Right (Visible to All) */}
       <div className="absolute top-6 right-6 z-10">
         <button
           onClick={() => router.push("/admin")}
@@ -106,17 +104,6 @@ export default function AuthPage() {
                 placeholder="Password"
                 disabled={isLoading}
               />
-              {!isLogin && (
-                <select
-                  className="border-2 border-grey bg-background text-[12px] mt-4 px-4 py-2 w-full rounded-full"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  disabled={isLoading}
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              )}
               {error && (
                 <p className="text-red-500 text-[12px] mt-2 mb-2">{error}</p>
               )}

@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { getAuth } from "firebase/auth";
 import {
   getFirestore, collection, addDoc, getDocs, query, where,
-  Timestamp, doc, updateDoc, increment, arrayUnion, getDoc, setDoc
+  Timestamp, doc, updateDoc, increment, getDoc, setDoc
 } from "firebase/firestore";
 import { initializeFirebase } from "../../../firebase/initFirebase";
 import VideoEditor from "./VideoEditor";
@@ -16,7 +16,7 @@ const { firestore } = initializeFirebase();
 const auth = getAuth();
 
 export default function VideoGrid({ videos: initialVideos }) {
-  const [videos, setVideos] = useState(initialVideos || []);  // Initialize with passed videos
+  const [videos, setVideos] = useState(initialVideos || []);
   const [loading, setLoading] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(null);
@@ -26,10 +26,8 @@ export default function VideoGrid({ videos: initialVideos }) {
   const [showEditor, setShowEditor] = useState(false);
   const isMounted = useRef(true);
 
-  // Initialize video list immediately with basic data
   useEffect(() => {
     if (initialVideos?.length > 0) {
-      // Set videos immediately with basic data to show something
       setVideos(initialVideos.map(video => ({
         ...video,
         id: video.public_id || video.title || `video_${Date.now()}`,
@@ -39,7 +37,6 @@ export default function VideoGrid({ videos: initialVideos }) {
         shares: 0,
         commentsList: []
       })));
-      
       setLoading(false);
     }
     
@@ -48,15 +45,11 @@ export default function VideoGrid({ videos: initialVideos }) {
     };
   }, []);
 
-  // Fetch and sync video data with Firebase - do this in parallel
   useEffect(() => {
     const fetchVideoData = async () => {
       try {
         if (initialVideos?.length > 0) {
-          // Start syncing with Firebase in background
           syncVideosWithFirebase(initialVideos);
-          
-          // Then fetch the complete data with likes and comments
           fetchVideosWithInteractions();
         }
       } catch (error) {
@@ -76,17 +69,13 @@ export default function VideoGrid({ videos: initialVideos }) {
     const syncPromises = [];
     
     for (const video of apiVideos) {
-      // Create a unique videoId - using cloudinary public_id or a custom ID
       const videoId = video.public_id || video.title || `video_${Date.now()}`;
-      
       const syncPromise = (async () => {
         try {
-          // Check if video already exists in Firebase
           const videoRef = doc(firestore, "videos", videoId);
           const videoDoc = await getDoc(videoRef);
           
           if (!videoDoc.exists()) {
-            // Video doesn't exist yet, create it
             await setDoc(videoRef, {
               id: videoId,
               title: video.title || "Untitled Video",
@@ -104,7 +93,6 @@ export default function VideoGrid({ videos: initialVideos }) {
           console.error(`Error syncing video ${videoId}:`, err);
         }
       })();
-      
       syncPromises.push(syncPromise);
     }
     
@@ -118,19 +106,13 @@ export default function VideoGrid({ videos: initialVideos }) {
     const videosSnapshot = await getDocs(collection(firestore, "videos"));
     const videosData = [];
     
-    // Prepare all promises for fetching video interactions
     const videoPromises = videosSnapshot.docs.map(async (doc) => {
       const videoData = doc.data();
-      
-      // Prepare all promises in parallel
       const [commentsSnapshot, likesSnapshot] = await Promise.all([
-        // Fetch comments for this video
         getDocs(query(
           collection(firestore, "comments"),
           where("videoId", "==", doc.id)
         )),
-        
-        // Check if current user has liked this video (if user is logged in)
         user ? getDocs(query(
           collection(firestore, "likes"),
           where("videoId", "==", doc.id),
@@ -138,7 +120,6 @@ export default function VideoGrid({ videos: initialVideos }) {
         )) : Promise.resolve({ empty: true })
       ]);
       
-      // Process comment data
       const commentsList = commentsSnapshot.docs.map(commentDoc => ({
         id: commentDoc.id,
         ...commentDoc.data(),
@@ -146,7 +127,6 @@ export default function VideoGrid({ videos: initialVideos }) {
         timestamp: commentDoc.data().timestamp.toDate().toLocaleString()
       }));
       
-      // Check if liked
       const liked = !likesSnapshot.empty;
       
       return {
@@ -156,7 +136,6 @@ export default function VideoGrid({ videos: initialVideos }) {
       };
     });
     
-    // Wait for all video data to be fetched
     const results = await Promise.all(videoPromises);
     
     if (isMounted.current) {
@@ -198,7 +177,6 @@ export default function VideoGrid({ videos: initialVideos }) {
 
     try {
       if (selectedVideo.liked) {
-        // Remove like
         const likesQuery = query(
           collection(firestore, "likes"),
           where("videoId", "==", videoId),
@@ -214,16 +192,13 @@ export default function VideoGrid({ videos: initialVideos }) {
           });
         }
         
-        // Update video document
         await updateDoc(videoRef, {
           likes: increment(-1)
         });
         
-        // Update local state
         updatedVideos[videoIndex].likes -= 1;
         updatedVideos[videoIndex].liked = false;
       } else {
-        // Add like
         const likesQuery = query(
           collection(firestore, "likes"),
           where("videoId", "==", videoId),
@@ -232,7 +207,6 @@ export default function VideoGrid({ videos: initialVideos }) {
         const likesSnapshot = await getDocs(likesQuery);
         
         if (likesSnapshot.empty) {
-          // Create new like document
           await addDoc(collection(firestore, "likes"), {
             userId: user.uid,
             userName: user.displayName || user.email || "Anonymous",
@@ -241,7 +215,6 @@ export default function VideoGrid({ videos: initialVideos }) {
             active: true
           });
         } else {
-          // Update existing like to active
           const likeDoc = likesSnapshot.docs[0];
           await updateDoc(doc(firestore, "likes", likeDoc.id), {
             active: true,
@@ -249,12 +222,10 @@ export default function VideoGrid({ videos: initialVideos }) {
           });
         }
         
-        // Update video document
         await updateDoc(videoRef, {
           likes: increment(1)
         });
         
-        // Update local state
         updatedVideos[videoIndex].likes += 1;
         updatedVideos[videoIndex].liked = true;
       }
@@ -266,27 +237,79 @@ export default function VideoGrid({ videos: initialVideos }) {
     }
   };
 
-  const handleShare = async (e) => {
+  const handleShare = async (e, platform = null) => {
     e.stopPropagation();
-    setShowShareOptions(!showShareOptions);
     
-    if (!showShareOptions && selectedVideo) {
-      try {
+    if (!selectedVideo) {
+      alert("No video selected");
+      return;
+    }
+    
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Please sign in to share videos");
+      return;
+    }
+
+    // Use production base URL (replace with your app's domain)
+    const baseUrl = "https://your-app.com"; // Update with your production domain
+    const videoUrl = `${baseUrl}/videos/${selectedVideo.id}`; // Construct public URL
+    const videoTitle = selectedVideo.title || "Untitled Video";
+
+    // Validate videoUrl
+    if (!videoUrl || typeof videoUrl !== "string") {
+      alert("Invalid video URL");
+      return;
+    }
+
+    try {
+      if (platform) {
+        // Handle specific share action
+        if (platform === "Copy Link") {
+          try {
+            await navigator.clipboard.write(videoUrl);
+            // No alert to avoid mentioning localhost
+          } catch (err) {
+            // Fallback for non-HTTPS or unsupported environments
+            const textarea = document.createElement("textarea");
+            textarea.value = videoUrl;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+              document.execCommand("copy");
+            } catch (copyErr) {
+              alert("Failed to copy link. Please copy manually: " + videoUrl);
+            }
+            document.body.removeChild(textarea);
+          }
+        } else if (platform === "Twitter") {
+          const tweetText = `Check out this video: ${videoTitle}`;
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(videoUrl)}`, "_blank");
+        } else if (platform === "Facebook") {
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(videoUrl)}`, "_blank");
+        }
+
+        // Increment share count only when a share action is performed
         const videoRef = doc(firestore, "videos", selectedVideo.id);
-        
-        // Update video document
         await updateDoc(videoRef, {
           shares: increment(1)
         });
-        
-        // Update local state
+
         const updatedVideos = [...videos];
         updatedVideos[selectedVideoIndex].shares = (updatedVideos[selectedVideoIndex].shares || 0) + 1;
         setVideos(updatedVideos);
         setSelectedVideo({ ...updatedVideos[selectedVideoIndex] });
-      } catch (err) {
-        console.error("Error updating share count:", err);
       }
+
+      // Toggle share options only if no platform is specified
+      if (!platform) {
+        setShowShareOptions(!showShareOptions);
+      } else {
+        setShowShareOptions(false);
+      }
+    } catch (err) {
+      console.error("Error handling share:", err);
+      alert("Failed to share video. Please try again.");
     }
   };
 
@@ -309,7 +332,6 @@ export default function VideoGrid({ videos: initialVideos }) {
     const videoId = selectedVideo.id;
     
     try {
-      // Add comment to comments collection
       const newCommentRef = await addDoc(collection(firestore, "comments"), {
         userId: user.uid,
         userName: user.displayName || user.email || "Anonymous",
@@ -318,13 +340,11 @@ export default function VideoGrid({ videos: initialVideos }) {
         timestamp: Timestamp.now()
       });
       
-      // Update video document
       const videoRef = doc(firestore, "videos", videoId);
       await updateDoc(videoRef, {
         comments: increment(1)
       });
       
-      // Update local state
       const newComment = {
         id: newCommentRef.id,
         text: commentText,
@@ -358,7 +378,6 @@ export default function VideoGrid({ videos: initialVideos }) {
     setShowEditor(false);
   };
 
-  // Show loading spinner only if no videos are available yet
   if (loading && videos.length === 0) {
     return <div className="container mx-auto p-2 text-center">Loading videos...</div>;
   }
@@ -372,7 +391,6 @@ export default function VideoGrid({ videos: initialVideos }) {
             className="bg-background border border-black overflow-hidden shadow-lg relative group cursor-pointer"
             onClick={() => openVideoModal(video, index)}
           >
-            {/* Use loading="lazy" and preload="metadata" for better performance */}
             <video 
               autoPlay 
               loop 
@@ -429,7 +447,6 @@ export default function VideoGrid({ videos: initialVideos }) {
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 bg-black shadow-[6px_6px_0px_0px_black] rounded-2xl border-black border-4 overflow-hidden flex flex-col">
                   <div className="relative w-full pt-0">
-                    {/* Main video player - preload="auto" for faster loading */}
                     <video controls autoPlay preload="auto" className="w-full h-auto max-h-[70vh] object-contain">
                       <source src={selectedVideo.src} type="video/mp4" />
                       Your browser does not support the video tag.
@@ -453,9 +470,9 @@ export default function VideoGrid({ videos: initialVideos }) {
                             {showShareOptions && (
                               <div className="absolute bottom-8 -left-12 bg-white p-2 shadow-lg rounded border border-gray-300">
                                 <div className="flex flex-col gap-2 text-gray-800">
-                                  <button className="hover:bg-gray-100 p-1 rounded flex items-center gap-1">Copy Link</button>
-                                  <button className="hover:bg-gray-100 p-1 rounded flex items-center gap-1">Twitter</button>
-                                  <button className="hover:bg-gray-100 p-1 rounded flex items-center gap-1">Facebook</button>
+                                  <button onClick={(e) => handleShare(e, "Copy Link")} className="hover:bg-gray-100 p-1 rounded flex items-center gap-1">Copy Link</button>
+                                  <button onClick={(e) => handleShare(e, "Twitter")} className="hover:bg-gray-100 p-1 rounded flex items-center gap-1">Twitter</button>
+                                  <button onClick={(e) => handleShare(e, "Facebook")} className="hover:bg-gray-100 p-1 rounded flex items-center gap-1">Facebook</button>
                                 </div>
                               </div>
                             )}
@@ -467,7 +484,7 @@ export default function VideoGrid({ videos: initialVideos }) {
                           </button>
                         </div>
 
-                        <button className="bg-neon font-semibold shadow-[3px_3px_0px_0px_black] px-3 py-2 rounded-xl border-2  border-grey" onClick={handleEditVideo}>
+                        <button className="bg-neon font-semibold shadow-[3px_3px_0px_0px_black] px-3 py-2 rounded-xl border-2 border-grey" onClick={handleEditVideo}>
                           edit video
                         </button>
                       </div>
@@ -533,7 +550,7 @@ export default function VideoGrid({ videos: initialVideos }) {
               videos={[{ public_id: selectedVideo.cloudinaryId || selectedVideo.id, secure_url: selectedVideo.src }]}
               onBack={handleBackFromEditor}
               singleVideoMode={true}
-              onVideoUpdated={() => fetchVideosWithInteractions()} // Refresh videos after editing
+              onVideoUpdated={() => fetchVideosWithInteractions()}
             />
           </div>
         </div>

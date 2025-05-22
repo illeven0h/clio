@@ -7,9 +7,9 @@ export default function LandingPage() {
     const { currentUser } = useAuth();
     const router = useRouter();
 
-    if (currentUser) {
-        router.push('/home');
-    }
+    //if (currentUser) {
+        //router.push('/home');
+    //}
 
     return (
         <div className="relative w-full h-screen overflow-hidden">

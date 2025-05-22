@@ -8,11 +8,7 @@ import {
   signInWithPopup,
   signOut,
 } from "firebase/auth";
-import {
-  doc,
-  getDoc,
-  setDoc,
-} from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { initializeFirebase } from "./initFirebase";
 
 // Initialize Firebase
@@ -45,15 +41,15 @@ export const AuthProvider = ({ children }) => {
   const getUserRole = async (uid) => {
     try {
       let role = null;
-      let docRef = doc(firestore, "admins", uid);
-      let docSnap = await getDoc(docRef);
+      const adminDocRef = doc(firestore, "admins", uid);
+      const adminDocSnap = await getDoc(adminDocRef);
 
-      if (docSnap.exists()) {
+      if (adminDocSnap.exists()) {
         role = "admin";
       } else {
-        docRef = doc(firestore, "users", uid);
-        docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
+        const userDocRef = doc(firestore, "users", uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
           role = "user";
         }
       }
@@ -63,33 +59,51 @@ export const AuthProvider = ({ children }) => {
       }
       return role;
     } catch (error) {
-      // console.error("Error getting user role:", error);
+      console.error("Error getting user role:", error);
       throw error;
     }
   };
 
-  const signUp = async (email, password, username, role = "user") => {
+  const login = async (email, password) => {
+    // Validate admin credentials
+    if (email === "admin@gmail.com" && password === "admin@1234") {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const user = result.user;
+      const role = await getUserRole(user.uid);
+      if (role !== "admin") {
+        throw new Error("Access denied: Not an admin account");
+      }
+      setCurrentUser(user);
+      setUserRole(role);
+      return { user, role };
+    } else {
+      // Regular user login
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const user = result.user;
+      const role = await getUserRole(user.uid);
+      if (role === "admin") {
+        throw new Error("Use admin credentials for admin login");
+      }
+      setCurrentUser(user);
+      setUserRole(role);
+      return { user, role };
+    }
+  };
+
+  const signUp = async (email, password, username) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    const collectionName = role === "admin" ? "admins" : "users";
-    const userDocRef = doc(firestore, collectionName, user.uid);
+    const role = "user"; // Default role for all signups
+    const userDocRef = doc(firestore, "users", user.uid);
 
     await setDoc(userDocRef, {
       email: user.email,
       username,
       role,
       createdAt: new Date(),
+      preferences: {},
     });
 
-    setCurrentUser(user);
-    setUserRole(role);
-    return { user, role };
-  };
-
-  const login = async (email, password) => {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    const user = result.user;
-    const role = await getUserRole(user.uid);
     setCurrentUser(user);
     setUserRole(role);
     return { user, role };
@@ -102,16 +116,16 @@ export const AuthProvider = ({ children }) => {
     const userDocRef = doc(firestore, "users", user.uid);
     const userDoc = await getDoc(userDocRef);
 
-    let role = "user"; // Default role for Google sign-in
+    let role = "user";
     if (!userDoc.exists()) {
       await setDoc(userDocRef, {
         email: user.email,
         username: user.displayName || user.email.split("@")[0],
         role,
         createdAt: new Date(),
+        preferences: {},
       });
     } else {
-      // If user exists, fetch their role
       role = (await getUserRole(user.uid)) || "user";
     }
 
