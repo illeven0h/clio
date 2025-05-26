@@ -16,7 +16,7 @@ const { firestore } = initializeFirebase();
 const auth = getAuth();
 
 export default function VideoGrid({ videos: initialVideos }) {
-  const [videos, setVideos] = useState(initialVideos || []);
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(null);
@@ -27,41 +27,36 @@ export default function VideoGrid({ videos: initialVideos }) {
   const isMounted = useRef(true);
 
   useEffect(() => {
-    if (initialVideos?.length > 0) {
-      setVideos(initialVideos.map(video => ({
-        ...video,
-        id: video.public_id || video.title || `video_${Date.now()}`,
-        src: video.secure_url || video.src,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        commentsList: []
-      })));
-      setLoading(false);
-    }
+    const initializeVideos = async () => {
+      if (initialVideos?.length > 0) {
+        // First, set up videos from Cloudinary with default interaction data
+        const videosWithDefaults = initialVideos.map(video => ({
+          ...video,
+          id: video.public_id || video.title || `video_${Date.now()}`,
+          src: video.secure_url || video.src,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          commentsList: [],
+          liked: false
+        }));
+        
+        setVideos(videosWithDefaults);
+        setLoading(false);
+        
+        // Then sync to Firebase and fetch interaction data in background
+        await syncVideosWithFirebase(initialVideos);
+        await fetchInteractionData(videosWithDefaults);
+      } else {
+        setLoading(false);
+      }
+    };
+
+    initializeVideos();
     
     return () => {
       isMounted.current = false;
     };
-  }, []);
-
-  useEffect(() => {
-    const fetchVideoData = async () => {
-      try {
-        if (initialVideos?.length > 0) {
-          syncVideosWithFirebase(initialVideos);
-          fetchVideosWithInteractions();
-        }
-      } catch (error) {
-        console.error("Error fetching video data:", error);
-      }
-    };
-
-    if (initialVideos?.length > 0) {
-      fetchVideoData();
-    } else {
-      setLoading(false);
-    }
   }, [initialVideos]);
 
   const syncVideosWithFirebase = async (apiVideos) => {
@@ -99,48 +94,64 @@ export default function VideoGrid({ videos: initialVideos }) {
     await Promise.all(syncPromises);
   };
 
-  const fetchVideosWithInteractions = async () => {
+  // NEW: Only fetch interaction data, don't replace video src/metadata
+  const fetchInteractionData = async (currentVideos) => {
     if (!isMounted.current) return;
     
     const user = auth.currentUser;
-    const videosSnapshot = await getDocs(collection(firestore, "videos"));
-    const videosData = [];
     
-    const videoPromises = videosSnapshot.docs.map(async (doc) => {
-      const videoData = doc.data();
-      const [commentsSnapshot, likesSnapshot] = await Promise.all([
-        getDocs(query(
-          collection(firestore, "comments"),
-          where("videoId", "==", doc.id)
-        )),
-        user ? getDocs(query(
-          collection(firestore, "likes"),
-          where("videoId", "==", doc.id),
-          where("userId", "==", user.uid)
-        )) : Promise.resolve({ empty: true })
-      ]);
+    try {
+      const updatedVideos = await Promise.all(
+        currentVideos.map(async (video) => {
+          const videoId = video.id;
+          
+          // Fetch comments and likes for this specific video
+          const [commentsSnapshot, likesSnapshot] = await Promise.all([
+            getDocs(query(
+              collection(firestore, "comments"),
+              where("videoId", "==", videoId)
+            )),
+            user ? getDocs(query(
+              collection(firestore, "likes"),
+              where("videoId", "==", videoId),
+              where("userId", "==", user.uid)
+            )) : Promise.resolve({ empty: true })
+          ]);
+          
+          // Get video stats from Firebase
+          const videoRef = doc(firestore, "videos", videoId);
+          const videoDoc = await getDoc(videoRef);
+          const firebaseVideoData = videoDoc.exists() ? videoDoc.data() : {};
+          
+          const commentsList = commentsSnapshot.docs.map(commentDoc => ({
+            id: commentDoc.id,
+            ...commentDoc.data(),
+            user: commentDoc.data().userName || commentDoc.data().userId,
+            timestamp: commentDoc.data().timestamp.toDate().toLocaleString()
+          }));
+          
+          const liked = !likesSnapshot.empty;
+          
+          // Keep original video data (src, etc.) but update interaction data
+          return {
+            ...video, // Keep original Cloudinary data
+            likes: firebaseVideoData.likes || 0,
+            comments: firebaseVideoData.comments || 0,
+            shares: firebaseVideoData.shares || 0,
+            commentsList,
+            liked,
+            // Preserve additional Firebase metadata if needed
+            uploadedAt: firebaseVideoData.uploadedAt || video.uploadedAt,
+            uploadedBy: firebaseVideoData.uploadedBy || video.uploadedBy
+          };
+        })
+      );
       
-      const commentsList = commentsSnapshot.docs.map(commentDoc => ({
-        id: commentDoc.id,
-        ...commentDoc.data(),
-        user: commentDoc.data().userName || commentDoc.data().userId,
-        timestamp: commentDoc.data().timestamp.toDate().toLocaleString()
-      }));
-      
-      const liked = !likesSnapshot.empty;
-      
-      return {
-        ...videoData,
-        commentsList,
-        liked
-      };
-    });
-    
-    const results = await Promise.all(videoPromises);
-    
-    if (isMounted.current) {
-      setVideos(results);
-      setLoading(false);
+      if (isMounted.current) {
+        setVideos(updatedVideos);
+      }
+    } catch (error) {
+      console.error("Error fetching interaction data:", error);
     }
   };
 
@@ -267,7 +278,7 @@ export default function VideoGrid({ videos: initialVideos }) {
         // Handle specific share action
         if (platform === "Copy Link") {
           try {
-            await navigator.clipboard.write(videoUrl);
+            await navigator.clipboard.writeText(videoUrl);
             // No alert to avoid mentioning localhost
           } catch (err) {
             // Fallback for non-HTTPS or unsupported environments
@@ -376,6 +387,11 @@ export default function VideoGrid({ videos: initialVideos }) {
 
   const handleBackFromEditor = () => {
     setShowEditor(false);
+  };
+
+  // Updated function to refresh interaction data after video updates
+  const handleVideoUpdated = async () => {
+    await fetchInteractionData(videos);
   };
 
   if (loading && videos.length === 0) {
@@ -550,7 +566,7 @@ export default function VideoGrid({ videos: initialVideos }) {
               videos={[{ public_id: selectedVideo.cloudinaryId || selectedVideo.id, secure_url: selectedVideo.src }]}
               onBack={handleBackFromEditor}
               singleVideoMode={true}
-              onVideoUpdated={() => fetchVideosWithInteractions()}
+              onVideoUpdated={handleVideoUpdated}
             />
           </div>
         </div>
