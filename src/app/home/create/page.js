@@ -172,12 +172,10 @@ export default function AdGeneratorUI() {
                     <a
                       href={videoUrl}
                       download={`generated-video-${Date.now()}.mp4`}
-                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                      className="bg-[#b2ff7f] hover:bg-[#b2ff7f] text-grey border-2 border-grey rounded-full shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] px-6 py-2  transition-colors flex items-center gap-2"
                     >
-                      ⬇️ Download
+                      Download
                     </a>
-
-
                   </div>
                 </div>
               </motion.div>

@@ -5,15 +5,15 @@ import Image from "next/image";
 
 import { 
   MdOutlineExplore, MdOutlineStar, MdOutlineVideoLibrary, 
-  MdOutlineArchive, MdOutlineFavorite, MdOutlineDashboard, MdFeedback 
+  MdOutlineArchive, MdOutlineFavorite, MdOutlineDashboard, MdFeedback , MdOutlineCreateNewFolder  
 } from "react-icons/md";
-
-const Sidebar = () => {
+ const Sidebar = () => {
   // Menu items array
   const menuItems = [
     {
       title: "Explore",
       subItems: [
+        { title: "Create", path: "/home/create", icon: <MdOutlineCreateNewFolder   /> },
         { title: "Featured", path: "/home", icon: <MdOutlineStar /> },
         { title: "Spotlight", path: "/home/spotlight", icon: <MdOutlineExplore /> },
       ],

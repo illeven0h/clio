@@ -7,65 +7,76 @@ export default function AdGeneratorUI() {
   const [videoUrl, setVideoUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const [debugInfo, setDebugInfo] = useState(null);
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    const trimmedPrompt = prompt.trim();
 
+    // Basic checks for prompt quality (from original file)
+    if (
+      trimmedPrompt.length < 3 ||                         // too short
+      /^[a-zA-Z]*$/.test(trimmedPrompt) ||                // one word only
+      /^[a-z]{1,5}$/.test(trimmedPrompt.toLowerCase()) || // likely junk
+      /(asdf|qwer|test|lorem|hello|1234)/i.test(trimmedPrompt) // common junk
+    ) {
+      setError("Invalid prompt. Please enter a more detailed and descriptive prompt.");
+      return;
+    }
+    
     setIsGenerating(true);
-    setGeneratedPrompt(prompt);
+    setGeneratedPrompt(trimmedPrompt);
+    setError(null);
     setVideoUrl("");
-    setError("");
     setDebugInfo(null);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 600000); // 10 minutes timeout
-
+    
     try {
+      console.log("Sending request to generate video...");
       const response = await fetch("/api/generatedVideos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-        signal: controller.signal,
+        body: JSON.stringify({ prompt: trimmedPrompt }),
+        // Add a timeout for the fetch request - match your API timeout
+        signal: AbortSignal.timeout(90000) // 90 second timeout (longer than API's 60s)
       });
 
-      clearTimeout(timeoutId);
+      // Check if response exists before attempting to parse
+      if (!response) {
+        throw new Error('No response received from server');
+      }
 
+      // Parse the response
       let data;
       try {
         data = await response.json();
-      } catch (parseErr) {
-        throw new Error("Invalid JSON response from server");
+        console.log("Response received:", data);
+      } catch (parseError) {
+        console.error("Error parsing response:", parseError);
+        throw new Error('Failed to parse server response');
       }
-
+      
       if (!response.ok) {
+        // Show detailed debug info if available
         if (data.htmlPreview || data.details) {
           setDebugInfo({
             preview: data.htmlPreview || data.details,
-            status: response.status,
-            stack: data.stack,
+            status: response.status
           });
         }
-        throw new Error(data.error || data.details || `Server error: ${response.status}`);
+        throw new Error(data.error || data.details || 'Failed to generate video');
       }
-
-      if (data.videoData) {
-        const dataUrl = `data:video/mp4;base64,${data.videoData}`;
-        setVideoUrl(dataUrl);
-      } else if (data.videoUrl) {
+      
+      if (data.videoUrl) {
         setVideoUrl(data.videoUrl);
+      } else if (data.videoData) {
+        // If we get base64 data instead of a URL
+        setVideoUrl(data:video/mp4;base64,${data.videoData});
       } else {
-        throw new Error("No video data received from server");
+        throw new Error('No video data received');
       }
-    } catch (err) {
-      if (err.name === "AbortError") {
-        setError("Video generation timed out after 10 minutes.");
-      } else {
-        setError(err.message || "Unexpected error occurred.");
-      }
+    } catch (error) {
+      console.error("Error generating video:", error);
+      setError(error.message || 'An unexpected error occurred');
     } finally {
       setIsGenerating(false);
     }
@@ -75,8 +86,18 @@ export default function AdGeneratorUI() {
     setPrompt("");
     setVideoUrl("");
     setGeneratedPrompt("");
-    setError("");
+    setError(null);
     setDebugInfo(null);
+  };
+
+  const handleRegenerate = () => {
+    if (generatedPrompt) {
+      setPrompt(generatedPrompt);
+      setVideoUrl("");
+      setError(null);
+      setDebugInfo(null);
+      handleGenerate();
+    }
   };
 
   const hasVideo = !!videoUrl;
@@ -86,6 +107,7 @@ export default function AdGeneratorUI() {
       <div className="flex-grow flex items-center justify-center">
         <div className="w-full max-w-4xl">
           <AnimatePresence mode="wait">
+            {/* Input View - Show when no video or when creating new */}
             {(!hasVideo || isGenerating) && (
               <motion.div
                 key="input"
@@ -100,6 +122,9 @@ export default function AdGeneratorUI() {
                       <div className="animate-spin w-12 h-12 border-4 border-[#CBFF9C] border-t-transparent rounded-full mx-auto mb-4"></div>
                       <h2 className="text-xl font-semibold mb-2">Generating Your Ad...</h2>
                       <p className="text-gray-400">Creating: "{generatedPrompt}"</p>
+                      <p className="mt-2 text-sm text-gray-500">
+                        Generating video... This may take up to 90 seconds. Please be patient.
+                      </p>
                     </div>
                   ) : (
                     <>
@@ -113,7 +138,27 @@ export default function AdGeneratorUI() {
                           placeholder="e.g., A dynamic tech startup ad with modern graphics..."
                           className="w-full p-4 rounded-xl bg-background border border-gray-600 text-grey placeholder-gray-400 focus:border-[#CBFF9C] focus:outline-none focus:ring-2 focus:ring-orange min-h-[120px] resize-none"
                           rows={4}
+                          disabled={isGenerating}
                         />
+                        
+                        {/* Error Display */}
+                        {error && (
+                          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-sm text-red-600">{error}</p>
+                            
+                            {debugInfo && (
+                              <div className="mt-2">
+                                <details className="text-xs">
+                                  <summary className="cursor-pointer text-gray-700">Show technical details</summary>
+                                  <div className="mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-40">
+                                    <pre className="whitespace-pre-wrap break-words">{debugInfo.preview}</pre>
+                                  </div>
+                                </details>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <button
                           onClick={handleGenerate}
                           disabled={!prompt.trim() || isGenerating}
@@ -121,9 +166,6 @@ export default function AdGeneratorUI() {
                         >
                           {isGenerating ? "Generating..." : "Generate Video Ad"}
                         </button>
-                        {error && (
-                          <p className="text-red-500 text-sm text-center">{error}</p>
-                        )}
                       </div>
                     </>
                   )}
@@ -131,6 +173,7 @@ export default function AdGeneratorUI() {
               </motion.div>
             )}
 
+            {/* Output View - Show when video is ready */}
             {hasVideo && !isGenerating && (
               <motion.div
                 key="output"
@@ -140,13 +183,14 @@ export default function AdGeneratorUI() {
                 className="w-full"
               >
                 <div className="bg-background backdrop-blur-sm p-8 border-4 border-grey rounded-[40px] shadow-[6px_6px_0px_0px_#333333]">
+                  {/* Video Header */}
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-2">
                       <h2 className="text-2xl font-semibold">Your Generated Ad</h2>
                       <div className="flex gap-2">
                         <button
                           onClick={handleCreateNew}
-                          className="bg-[#CBFF9C] text-grey border-2 border-grey rounded-full shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] px-4 py-2 "
+                          className="bg-[#CBFF9C] text-grey border-2 border-grey rounded-full shadow-[3px_3px_0px_0px_rgba(13,13,15,1.00)] px-4 py-2"
                         >
                           Create New
                         </button>
@@ -159,25 +203,30 @@ export default function AdGeneratorUI() {
                     )}
                   </div>
 
+                  {/* Video Player */}
                   <div className="relative rounded-xl overflow-hidden bg-black">
-                    <video
-                      src={videoUrl}
-                      controls
+                    <video 
+                      src={videoUrl} 
+                      controls 
                       className="w-full aspect-video object-cover"
                       poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'%3E%3Crect width='800' height='450' fill='%23000'/%3E%3Ctext x='400' y='225' text-anchor='middle' fill='%23666' font-family='Arial' font-size='24'%3EGenerated Ad Video%3C/text%3E%3C/svg%3E"
                     />
                   </div>
 
+                  {/* Action Buttons */}
                   <div className="mt-6 flex flex-wrap gap-3 justify-center">
-                    <a
-                      href={videoUrl}
-                      download={`generated-video-${Date.now()}.mp4`}
-                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                      ⬇ Download
+                    </button>
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                      📤 Share
+                    </button>
+                    <button 
+                      onClick={handleRegenerate}
+                      className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
                     >
-                      ⬇️ Download
-                    </a>
-
-
+                      🔄 Regenerate
+                    </button>
                   </div>
                 </div>
               </motion.div>
