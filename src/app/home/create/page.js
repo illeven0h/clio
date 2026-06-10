@@ -99,7 +99,7 @@ export default function AdGeneratorUI() {
                     <div className="text-center">
                       <div className="animate-spin w-12 h-12 border-4 border-[#CBFF9C] border-t-transparent rounded-full mx-auto mb-4"></div>
                       <h2 className="text-xl font-semibold mb-2">Generating Your Ad...</h2>
-                      <p className="text-gray-400">Creating: "{generatedPrompt}"</p>
+                      <p className="text-gray-400">Creating: &quot;{generatedPrompt}&quot;</p>
                     </div>
                   ) : (
                     <>
@@ -154,7 +154,7 @@ export default function AdGeneratorUI() {
                     </div>
                     {generatedPrompt && (
                       <p className="text-grey text-sm p-3 rounded-lg">
-                        <span className="font-bold text-grey">Prompt:</span> "{generatedPrompt}"
+                        <span className="font-bold text-grey">Prompt:</span> &quot;{generatedPrompt}&quot;
                       </p>
                     )}
                   </div>
