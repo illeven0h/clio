@@ -22,7 +22,7 @@ bun dev
 You can view the live project here:  
 
 🔗 **Live Demo:** 
-[Clio on Vercel](https://clio-ou5wyujg3-imans-projects-1e2c64dd.vercel.app/)  
+[Clio on Vercel](https://clio-3a14ajrip-imans-projects-1e2c64dd.vercel.app/)  
 
 This project is hosted on [Vercel](https://vercel.com/) for seamless deployment and performance.
 
