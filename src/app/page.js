@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useAuth } from "/firebase/auth";
+import { useAuth } from "/firebase/auth.js";
 import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
